@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat App</title>
+    <script src="./main.js"></script>
+  </head>
+  <body>
+    <h1>Chat App</h1>
+    
+    <h2>Send Message</h2>
+    <label for="sender">Sender:</label>
+    <input type="text" id="sender" name="sender"><br>
+    <label for="chat_id">Chat ID:</label>
+    <input type="text" id="chat_id" name="chat_id"><br>
+    <label for="message">Message:</label>
+    <input type="text" id="message" name="message"><br>
+    <button onclick="sendMessage()">Send Message</button>
+    
+    <h2>Create Chat</h2>
+    <label for="new_chat_id">Chat ID:</label>
+    <input type="text" id="new_chat_id" name="new_chat_id"><br>
+    <button onclick="createChat()">Create Chat</button>
+    
+    <h2>Get Messages</h2>
+    <label for="get_chat_id">Chat ID:</label>
+    <input type="text" id="get_chat_id" name="get_chat_id"><br>
+    <button onclick="getMessages()">Get Messages</button>
+  </body>
+</html>
