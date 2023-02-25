@@ -102,10 +102,12 @@ function sendMessage(chat_id, sender, message, password) {
   }
 
   function clear() {
+    console.log("clear")
     try {
       chat_id = document.getElementById("chat_id").value;
       password = document.getElementById("chat_password").value;
     } catch (error) {
+      console.log(error)
     chat_id = localStorage.getItem("chat_id");
     password = localStorage.getItem("password");
     }
