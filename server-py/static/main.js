@@ -127,16 +127,37 @@ function sendMessage(chat_id, sender, message, password) {
       
     localStorage.setItem("chat_id", chat_id);
     localStorage.setItem("password", password);
+
+    console.log(chat_id, password)
       
     //print message_list to div id="message_list"
+    update_chat();
+    
+  }
+  
+  async function update_chat() {
     try {
+      let chat_id = localStorage.getItem("chat_id");
+      let password = localStorage.getItem("password");
       let message_list = await getMessages(chat_id, password);
       let message_list_html = "";
       for (let i = 0; i < message_list.length; i++) {
         let message = message_list[i];
+        let time_delta = Math.floor(Date.now() / 1000) - message[2];
+        let time_string = "";
+        if (time_delta < 60) {
+          time_string = time_delta + "s";
+        } else if (time_delta < 3600) {
+          time_string = Math.floor(time_delta / 60) + "m";
+        } else if (time_delta < 86400) {
+          time_string = Math.floor(time_delta / 3600) + "h";
+        } else {
+          time_string = Math.floor(time_delta / 86400) + "d";
+        }
+        message[2] = time_string;
         let message_html = `
           <div class="message">
-            <div class="sender">${message[0]}</div>
+            <div class="sender">${message[0]}, ${message[2]}</div>
             <div class="text">${message[1]}</div>
           </div>
         `;
@@ -147,4 +168,3 @@ function sendMessage(chat_id, sender, message, password) {
       console.error('Error:', error);
     }
   }
-  

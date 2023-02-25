@@ -2,12 +2,13 @@
     margin: 10px 0;
     clear: both;
     overflow: auto;
-  }
+}
   
 .sender {
     font-size: 10px;
     margin-bottom: 5px;
     color: #999;
+    font-family: 'Roboto', sans-serif;
 
 }
   
@@ -20,5 +21,6 @@
     font-size: 28px;
     color: #333;
     word-wrap: break-word;
+    font-family: 'Roboto', sans-serif;
 
 }
