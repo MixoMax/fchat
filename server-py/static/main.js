@@ -40,16 +40,17 @@ function sendMessage(chat_id, sender, message, password) {
   
   // Function to get messages from a chat
   function getMessages(chat_id, password) {
-	let formData = new FormData();
-	formData.append('chat_id', chat_id);
-  formData.append('password', password);
-    fetch('/get', {
+    let formData = new FormData();
+    formData.append('chat_id', chat_id);
+    formData.append('password', password);
+    return fetch('/get', {
       method: 'POST',
       body: formData
     })
     .then(response => response.json())
     .then(data => {
       console.log('Messages:', data);
+      return data;
     })
     .catch(error => {
       console.error('Error getting messages:', error);
@@ -73,54 +74,77 @@ function sendMessage(chat_id, sender, message, password) {
     });
   }
 
-  function switch_chat(n) {
-    switch (n) {
-      case 1:
-        chat_id = document.getElementById("chat_id").value;
-        password = document.getElementById("password").value;
-        break;
-      case 2:
-        chat_id = document.getElementById("new_chat_id").value;
-        password = document.getElementById("new_chat_password").value;
-        break;
-      case 3:
-        chat_id = document.getElementById("get_chat_id").value;
-        password = document.getElementById("get_chat_password").value;
-        break;
-      case 4:
-        chat_id = document.getElementById("clear_chat_id").value;
-        password = document.getElementById("clear_chat_password").value;    
-  }
-  return chat_id, password;
-  }
+
 
   function send() {
-    switch_chat(1);
     let message = document.getElementById("message").value;
+    chat_id = localStorage.getItem("chat_id");
+    password = localStorage.getItem("password");
     let sender = localStorage.getItem("username");
     sendMessage(chat_id, sender, message, password);
   }
 
   function create() {
-    switch_chat(2);
+    try {
+      chat_id = document.getElementById("chat_id").value;
+      password = document.getElementById("chat_password").value;
+    } catch (error) {
+    chat_id = localStorage.getItem("chat_id");
+    password = localStorage.getItem("password");
+    }
     createChat(chat_id, password);
   }
 
   function get() {
-    switch_chat(3);
+    chat_id = localStorage.getItem("chat_id");
+    password = localStorage.getItem("password");
     getMessages(chat_id, password);
   }
 
   function clear() {
-    switch_chat(4);
+    try {
+      chat_id = document.getElementById("chat_id").value;
+      password = document.getElementById("chat_password").value;
+    } catch (error) {
+    chat_id = localStorage.getItem("chat_id");
+    password = localStorage.getItem("password");
+    }
+    console.log(chat_id, password)
     clearChat(chat_id, password);
   }
 
   function login() {
     const sender = document.getElementById("username").value;
-    console.log(sender);
     //save username in local storage
     localStorage.setItem("username", sender);
     //redirect to chat page
     window.location.replace("/chat");
   }
+
+  async function change_chat() {
+    let chat_id = document.getElementById("chat_id").value;
+    let password = document.getElementById("chat_password").value;
+      
+    localStorage.setItem("chat_id", chat_id);
+    localStorage.setItem("password", password);
+      
+    //print message_list to div id="message_list"
+    try {
+      let message_list = await getMessages(chat_id, password);
+      let message_list_html = "";
+      for (let i = 0; i < message_list.length; i++) {
+        let message = message_list[i];
+        let message_html = `
+          <div class="message">
+            <div class="sender">${message[0]}</div>
+            <div class="text">${message[1]}</div>
+          </div>
+        `;
+        message_list_html += message_html;
+      }
+      document.getElementById("message_list").innerHTML = message_list_html;
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  

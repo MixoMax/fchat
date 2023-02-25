@@ -1,0 +1,24 @@
+.message {
+    margin: 10px 0;
+    clear: both;
+    overflow: auto;
+  }
+  
+.sender {
+    font-size: 10px;
+    margin-bottom: 5px;
+    color: #999;
+
+}
+  
+.text {
+    padding: 5px;
+    border-radius: 10px;
+    max-width: 70%;
+    display: inline-block;
+    background-color: #f1f0f0;
+    font-size: 28px;
+    color: #333;
+    word-wrap: break-word;
+
+}
