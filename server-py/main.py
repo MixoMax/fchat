@@ -3,7 +3,11 @@ import csv
 
 app = Flask(__name__)
 
-#backend server for a chat app
+#backend server for fchat
+#by @MixoMax
+#github.com/MixoMax/fchat
+#LBDR License
+
 
 
 @app.route("/", methods=['GET'])
