@@ -29,14 +29,20 @@ def file_exists(file_path):
 
 @app.route("/", methods=['GET'])
 def index():
-    return render_template("index.html")
+    return render_template("login.html")
 
 
 @app.route('/main.js')
 def serve_js():
     return app.send_static_file('main.js'), {'Content-Type': 'text/javascript'}
 
+@app.route("/favicon.ico")
+def favicon():
+    return app.send_static_file("favicon.ico")
 
+@app.route("/chat", methods=['GET'])
+def chat():
+    return render_template("chat.html")
 
 
 @app.route('/send', methods=['POST'])
@@ -49,17 +55,17 @@ def send():
     password = request.form['password']
     
     if not check_password(password, chat_id):
-        return "wrong password", 401
+        return "wrong password", 401 #unauthorized
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
-        return "chat does not exist", 404
+        return "chat does not exist", 404 #not found
     else:
         file_path = "./server-py/data/" + chat_id + "/chat.csv"
         
-        with open(file_path, 'a') as f:
+        with open(file_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([sender, message, timestamp])
         
-        return "success", 200
+        return "success", 200 #success
     
 
 @app.route("/new_chat", methods=['POST'])
@@ -72,7 +78,7 @@ def new_chat():
         password = hashlib.sha256(password.encode()).hexdigest()
     
     if file_exists("./server-py/data/" + chat_id + "/info.txt"):
-        return "chat already exists", 409
+        return "chat already exists", 409 #conflict
     
     file_path = "./server-py/data/"
     os.mkdir(file_path + chat_id)
@@ -86,7 +92,7 @@ def new_chat():
     
     
     
-    return "success", 200
+    return "success", 200 #success
 
 
 @app.route('/get', methods=['POST'])
@@ -96,9 +102,9 @@ def get():
     chat_id = request.form['chat_id']
     password = request.form['password']
     if not check_password(password, chat_id):
-        return "wrong password", 401
+        return "wrong password", 401 #unauthorized
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
-        return "chat does not exist", 404
+        return "chat does not exist", 404 #not found
     else:
         file_path = "./server-py/data/" + chat_id + "/chat.csv"
         
@@ -106,16 +112,17 @@ def get():
             reader = csv.reader(f)
             data = list(reader)
         
-        return jsonify(data), 200
+        return jsonify(data), 200 #success
 
 
 @app.route("/clear", methods=['POST'])
 def clear():
     chat_id = request.form['chat_id']
     password = request.form['password']
+    if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
+        return "chat does not exist", 404 #not found
     if not check_password(password, chat_id):
-        #return status code 401
-        return "wrong password", 401
+        return "wrong password", 401 #unauthorized
     else:
         #delete chat folder
         chat_folder = "./server-py/data/" + chat_id
@@ -125,8 +132,12 @@ def clear():
         
         os.rmdir(chat_folder)
         
-        return "success", 200
+        return "success", 200 #success
 
+
+@app.route("/teapot", methods=['GET'])
+def i_am_a_teapot():
+    return "I am a teapot", 418 #I am a teapot
 
 
 if __name__ == "__main__":
