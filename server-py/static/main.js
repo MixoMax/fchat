@@ -77,7 +77,9 @@ function sendMessage(chat_id, sender, message, password) {
 
 
   function send() {
-    let message = document.getElementById("message").value;
+    let message_input = document.getElementById("message_input");
+    let message = message_input.value;
+    message_input.value = "";
     chat_id = localStorage.getItem("chat_id");
     password = localStorage.getItem("password");
     let sender = localStorage.getItem("username");
@@ -178,8 +180,25 @@ function sendMessage(chat_id, sender, message, password) {
         `;}
         message_list_html += message_html;
       }
-      document.getElementById("message_list").innerHTML = message_list_html;
+      const message_list_div = document.getElementById("message_list");
+      message_list_div.innerHTML = message_list_html;
+      message_list_div.scrollTop = message_list_div.scrollHeight - message_list_div.clientHeight;
     } catch (error) {
       console.error('Error:', error);
     }
   }
+
+// 
+function change_password_visibility(){
+  const password_visibility_button = document.getElementById("password_visibility_button"); 
+  const password_field = document.getElementById("chat_password");
+  if (password_visibility_button.value == "true") {
+    password_field.type = "password";
+    password_visibility_button.value = "false";
+    password_visibility_button.innerHTML = "Show Password";
+  } else {
+    password_field.type = "text";
+    password_visibility_button.value = "true";
+    password_visibility_button.innerHTML = "Hide Password";
+  }
+}
