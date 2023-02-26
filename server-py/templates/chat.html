@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat App</title>
+    <script src="./main.js"></script>
+    
+    <link rel = "stylesheet" href = "./stylesheet1.css" />
+  </head>
+  <body>
+    <h1>Chat App</h1>
+    
+    <div id="chat"></div>
+    <h2>change Chat</h2>
+    <input type="text" id="chat_id" />
+    <input type="text" id="chat_password" />
+    <button onclick="change_chat()">Change Chat</button>
+    <button onclick="create()">Create Chat</button>
+
+
+    <h2>Message List</h2>
+    <div id="message_list"></div>
+    
+
+    <h2>Send Message</h2>
+    <input type="text" id="message" />
+    <button onclick="send()">Send Message</button>
+
+    <h2>Clear Chat</h2>
+    <button onclick="clear_current_chat()">Clear Chat</button>
+
+  </body>
+</html>
