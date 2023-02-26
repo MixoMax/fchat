@@ -77,6 +77,10 @@ def favicon():
 def stylesheet1():
     return app.send_static_file("stylesheet1.css")
 
+@app.route("/stylesheet_login.css")
+def stylesheet_login():
+    return app.send_static_file("stylesheet_login.css")
+
 @app.route("/chat", methods=['GET'])
 def chat():
     return render_template("chat.html")

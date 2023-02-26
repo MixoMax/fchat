@@ -1,0 +1,80 @@
+body{
+    font-family: "Roboto", sans-serif;
+    background-color: #222;
+    color: #fff;
+}
+
+#username{
+    position: absolute;
+    top: calc(50% - 24px);
+    left: 50%;
+    width: 150px;
+    height: 36px;
+    transform: translate(-50%, 0%);
+
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+}
+
+#login_button{
+    position: absolute;
+    top: calc(50% + 24px);
+    left: 50%;
+    width: 154px;
+    height: 38px;
+    transform: translate(-50%, 0%);
+
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#welcome_text{
+    position: absolute;
+    top: calc(50% - 180px);
+    left: 50%;
+    transform: translate(-50%, 0%);
+    font-size: 32px;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    align-self: center;
+}
+
+#welcome{
+    font-family: Work Sans sans-serif;
+    font-size: 80px;
+    background: linear-gradient(to right, #872cda, #6f39d1, #5940c5, #4643b8, #3545aa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+button{
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+}
+  
+  /* Hover effect for buttons */
+button:hover{
+    background-color: #0062cc;
+}
+
+/* Remove default outline on focus */
+:focus{
+    outline: none;
+}
