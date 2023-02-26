@@ -32,6 +32,10 @@ function sendMessage(chat_id, sender, message, password) {
     })
     .then(response => {
     	console.log('Chat created:', response);
+      localStorage.setItem("chat_id", chat_id);
+      localStorage.setItem("password", password);
+
+      change_chat();
     })
     .catch(error => {
     	console.error('Error creating chat:', error);
@@ -77,6 +81,7 @@ function sendMessage(chat_id, sender, message, password) {
 
 
   function send() {
+    if(document.getElementById("message_input").placeholder == "Join a chat to send messages") return no_chat();
     let message_input = document.getElementById("message_input");
     let message = message_input.value;
     message_input.value = "";
@@ -129,7 +134,13 @@ function sendMessage(chat_id, sender, message, password) {
   async function change_chat() {
     let chat_id = document.getElementById("chat_id").value;
     let password = document.getElementById("chat_password").value;
-      
+    if(chat_id == "" || password == "") return;
+
+    document.getElementById("chat_id").value = "";
+    document.getElementById("chat_password").value = "";
+    document.getElementById("chat_name").innerHTML = "";
+    document.getElementById("message_input").placeholder = "Send a message in " + chat_id;
+
     localStorage.setItem("chat_id", chat_id);
     localStorage.setItem("password", password);
 
@@ -201,4 +212,23 @@ function change_password_visibility(){
     password_visibility_button.value = "true";
     password_visibility_button.innerHTML = "Hide Password";
   }
+}
+
+function send_message_on_enter(event) {
+  if (event.keyCode == 13) {
+    send();
+  }
+}
+
+function change_chat_on_enter(event) {
+  if (event.keyCode == 13) {
+    change_chat();
+  }
+}
+
+function no_chat(){
+  document.getElementById("no_chat").style.top = "790px";
+  setTimeout(()=>{
+    document.getElementById("no_chat").style.top = "830px";
+  }, 2500) 
 }

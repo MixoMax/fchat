@@ -42,6 +42,7 @@ body{
     position: absolute;
     top: calc(50% - 180px);
     left: 50%;
+    width: 100%;
     transform: translate(-50%, 0%);
     font-size: 32px;
     text-align: center;
@@ -70,7 +71,7 @@ button{
 }
   
   /* Hover effect for buttons */
-button:hover{
+#login_button:hover{
     background-color: #0062cc;
 }
 
