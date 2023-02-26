@@ -82,6 +82,7 @@ function sendMessage(chat_id, sender, message, password) {
     password = localStorage.getItem("password");
     let sender = localStorage.getItem("username");
     sendMessage(chat_id, sender, message, password);
+    update_chat();
   }
 
   function create() {
@@ -101,7 +102,7 @@ function sendMessage(chat_id, sender, message, password) {
     getMessages(chat_id, password);
   }
 
-  function clear() {
+  function clear_current_chat() {
     console.log("clear")
     try {
       chat_id = document.getElementById("chat_id").value;
@@ -141,6 +142,7 @@ function sendMessage(chat_id, sender, message, password) {
     try {
       let chat_id = localStorage.getItem("chat_id");
       let password = localStorage.getItem("password");
+      let user = localStorage.getItem("username");
       let message_list = await getMessages(chat_id, password);
       let message_list_html = "";
       for (let i = 0; i < message_list.length; i++) {
@@ -157,12 +159,23 @@ function sendMessage(chat_id, sender, message, password) {
           time_string = Math.floor(time_delta / 86400) + "d";
         }
         message[2] = time_string;
-        let message_html = `
+        if (message[0] == user) {
+          message[0] = "You";
+        }
+        if (message[0] == "You") {
+          message_html = `
+          <div class="message">
+            <div class="user_sender">${message[0]}, ${message[2]}</div>
+            <div class="user_text">${message[1]}</div>
+          </div>`
+        } else {
+          
+        message_html = `
           <div class="message">
             <div class="sender">${message[0]}, ${message[2]}</div>
             <div class="text">${message[1]}</div>
           </div>
-        `;
+        `;}
         message_list_html += message_html;
       }
       document.getElementById("message_list").innerHTML = message_list_html;

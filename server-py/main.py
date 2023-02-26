@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+from scripts.filter_csv import filter_csv
 import csv
 import os
 import hashlib
@@ -153,6 +154,8 @@ def get():
         
         decoded_data = []
         for row in data:
+            if row == []:
+                continue
             decoded_sender = decode(row[0])
             decoded_message = decode(row[1])
             if decoded_sender == "" and decoded_message == "":

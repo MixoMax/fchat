@@ -1,6 +1,8 @@
 /* Set font to Roboto */
 body {
   font-family: "Roboto", sans-serif;
+  background-color: #222;
+  color: #fff;
 }
 
 /* Style input fields */
@@ -8,7 +10,9 @@ input[type="text"] {
   padding: 10px;
   border: none;
   border-radius: 5px;
-  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+  background-color: #444;
+  color: #fff;
 }
 
 /* Style buttons */
@@ -20,7 +24,7 @@ button {
   color: #fff;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
 }
 
 /* Hover effect for buttons */
@@ -38,10 +42,13 @@ h1, h2 {
 #message_list {
   border: none;
   border-radius: 5px;
-  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
   padding: 10px;
-  height: 200px;
+  width: 70%;
+  height: 600px;
   overflow-y: auto;
+  margin: 0 auto;
+  background-color: #444;
 }
 
 /* Remove default outline on focus */
@@ -49,24 +56,53 @@ h1, h2 {
   outline: none;
 }
 
+.message {
+  clear: both;
+  margin-bottom: 10px;
+}
 
 .sender {
-    font-size: 10px;
-    margin-bottom: 5px;
-    color: #999;
-    font-family: 'Roboto', sans-serif;
-
+  font-size: 10px;
+  margin-bottom: 5px;
+  color: #ccc;
+  font-family: 'Roboto', sans-serif;
+  float: left;
 }
-  
-.text {
-    padding: 5px;
-    border-radius: 10px;
-    max-width: 70%;
-    display: inline-block;
-    background-color: #f1f0f0;
-    font-size: 28px;
-    color: #333;
-    word-wrap: break-word;
-    font-family: 'Roboto', sans-serif;
 
+.user_sender {
+  font-size: 10px;
+  margin-bottom: 5px;
+  color: #ccc;
+  font-family: 'Roboto', sans-serif;
+  float: right;
+}
+
+.text {
+  padding: 5px;
+  border-radius: 10px;
+  max-width: 70%;
+  display: inline-block;
+  background-color: #333;
+  font-size: 28px;
+  color: #fff;
+  word-wrap: break-word;
+  font-family: 'Roboto', sans-serif;
+  float: left;
+  clear: both;
+  margin-bottom: 5px;
+}
+
+.user_text {
+  padding: 5px;
+  border-radius: 10px;
+  max-width: 70%;
+  display: inline-block;
+  background-color: #55e95d;
+  font-size: 28px;
+  color: #fff;
+  word-wrap: break-word;
+  font-family: 'Roboto', sans-serif;
+  float: right;
+  clear: both;
+  margin-bottom: 5px;
 }
