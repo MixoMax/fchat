@@ -3,13 +3,17 @@ from main import app
 import requests
 import socket
 
+
+port = 80
+
 #get external ip
 R = requests.get("http://ip-api.com/json").json()
 IP = R["query"]
-print("Running on: " + IP + ":80 (external ip))")
+print("Running on: " + IP, ":", port, "(external ip)")
 
 #get internal ip
-print("Running on: " + socket.gethostbyname(socket.gethostname()) + ":80 (internal ip))")
+print("Running on: " + socket.gethostbyname(socket.gethostname()), ":", port, "(internal ip)")
 
 
-waitress.serve(app, host="127.0.0.1", port=80)
+
+waitress.serve(app, listen="*" + ":" + str(port))
