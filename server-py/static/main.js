@@ -1,3 +1,5 @@
+
+
 // Function to send a message to a chat
 function sendMessage(chat_id, sender, message, password) {
 	let time = Math.floor(Date.now() / 1000);
@@ -90,6 +92,8 @@ function sendMessage(chat_id, sender, message, password) {
     let sender = localStorage.getItem("username");
     sendMessage(chat_id, sender, message, password);
     update_chat();
+    let message_list_div = document.getElementById("message_list");
+    message_list_div.scrollTop = message_list_div.scrollHeight - message_list_div.clientHeight;
   }
 
   function create() {
@@ -193,7 +197,6 @@ function sendMessage(chat_id, sender, message, password) {
       }
       const message_list_div = document.getElementById("message_list");
       message_list_div.innerHTML = message_list_html;
-      message_list_div.scrollTop = message_list_div.scrollHeight - message_list_div.clientHeight;
     } catch (error) {
       console.error('Error:', error);
     }
@@ -232,3 +235,4 @@ function no_chat(){
     document.getElementById("no_chat").style.top = "830px";
   }, 2500) 
 }
+setInterval(update_chat, 1000);
