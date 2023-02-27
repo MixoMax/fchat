@@ -7,7 +7,19 @@ body {
 
 /* Style input fields */
 input[type="text"] {
-  padding: 10px;
+  width: 150px;
+  height: 36px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+  background-color: #444;
+  color: #fff;
+}
+
+/* Style password fields */
+input[type="password"] {
+  width: 150px;
+  height: 36px;
   border: none;
   border-radius: 5px;
   box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
@@ -17,7 +29,8 @@ input[type="text"] {
 
 /* Style buttons */
 button {
-  padding: 10px 20px;
+  height: 38px;
+  width: 154px;
   border: none;
   border-radius: 5px;
   background-color: #007bff;
@@ -38,22 +51,55 @@ h1, h2 {
   margin-top: 30px;
 }
 
-/* Style message list */
-#message_list {
+#message_field {
+  position: absolute;
+  left: 15%;
+  top: 263px;
   border: none;
   border-radius: 5px;
   box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
-  padding: 10px;
-  width: 70%;
-  height: 600px;
+  width: calc(70% + 20px);
+  height: 620px;
   overflow-y: auto;
   margin: 0 auto;
   background-color: #444;
 }
 
+/* Style message list */
+#message_list {
+  position: relative;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: calc(100% - 62px);
+  overflow-y: auto;
+  margin: 0 auto;
+}
+
 /* Remove default outline on focus */
 :focus {
   outline: none;
+}
+
+/* Style message input*/
+#message_input {
+  position: absolute;
+  left: 16.5%;
+  top: 830px;
+  width: calc(67% - 145px);
+  height: 38px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  margin: 0 auto;
+  background-color: #4b4b4b;
+}
+
+#send_message_button{
+  position: absolute;
+  right: calc(16.5% - 20px);
+  top: 830px;
+  height: 40px;
 }
 
 .message {
@@ -105,4 +151,32 @@ h1, h2 {
   float: right;
   clear: both;
   margin-bottom: 5px;
+}
+
+#chat_name {
+  position: absolute;
+  left: 50%;
+  top: 272px;
+  transform: translate(-50%, 0%);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 18px;
+  font-family: 'Roboto', sans-serif;
+}
+
+#no_chat{
+  position: absolute;
+  left: 16.5%;
+  top: 830px;
+  width: 480px;
+  height: 30px;
+  padding: 5px;
+  visibility: visible;
+  border-radius: 7px;
+  background: #ff0000;
+  color: rgb(255, 255, 255);
+  font-size: 22px;
+  font-family: 'Roboto', sans-serif;
+  text-align: center;
+  align-self: center;
+  transition: linear 0.4s;
 }
