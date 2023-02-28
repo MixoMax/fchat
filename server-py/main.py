@@ -16,14 +16,20 @@ def check_password(password, chat_id):
     try:
         with open(file_path, 'r') as f:
             chat_password = f.read()
+            password = hashlib.sha256(password.encode()).hexdigest()
+            if chat_password == "*":
+                return True
+            print(password, chat_password)
+            if password == chat_password:
+                print("password correct")
+                return True, 200 #success
+            else :
+                return False, 401 #unauthorized
     except:
         return False, 404
     
-    if chat_password == "*":
-        return True
+
     
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    return password_hash == chat_password, 401 #return true if the password is correct
 
 def file_exists(file_path):
     try:
@@ -92,7 +98,7 @@ def send():
     timestamp = request.form['timestamp']
     password = request.form['password']
     
-    if not check_password(password, chat_id):
+    if check_password(password, chat_id) == False:
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
@@ -141,7 +147,7 @@ def get():
     
     chat_id = request.form['chat_id']
     password = request.form['password']
-    if not check_password(password, chat_id):
+    if check_password(password, chat_id) == False:
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
@@ -176,7 +182,7 @@ def clear():
     password = request.form['password']
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
-    if not check_password(password, chat_id):
+    if check_password(password, chat_id) == False:
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
     else:
         #delete chat folder
