@@ -17,9 +17,10 @@ def check_password(password, chat_id):
         with open(file_path, 'r') as f:
             chat_password = f.read()
             password = hashlib.sha256(password.encode()).hexdigest()
+            print(password," | ", chat_password)
             if chat_password == "*":
-                return True
-            print(password, chat_password)
+                return True, 200
+            
             if password == chat_password:
                 print("password correct")
                 return True, 200 #success
@@ -98,8 +99,10 @@ def send():
     timestamp = request.form['timestamp']
     password = request.form['password']
     
-    if check_password(password, chat_id) == False:
-        return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
+    password_bool, error_code = check_password(password, chat_id)
+    
+    if password_bool == False:
+        return "wrong password", error_code #unauthorized or not found
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
     else:
@@ -147,8 +150,10 @@ def get():
     
     chat_id = request.form['chat_id']
     password = request.form['password']
-    if check_password(password, chat_id) == False:
-        return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
+    password_bool, error_code = check_password(password, chat_id)
+    
+    if password_bool == False:
+        return "wrong password", error_code #unauthorized or not found
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
     else:
@@ -182,8 +187,11 @@ def clear():
     password = request.form['password']
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
-    if check_password(password, chat_id) == False:
-        return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
+    
+    password_bool, error_code = check_password(password, chat_id)
+    
+    if password_bool == False:
+        return "wrong password", error_code #unauthorized or not found
     else:
         #delete chat folder
         chat_folder = "./server-py/data/" + chat_id
