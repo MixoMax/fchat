@@ -4,62 +4,6 @@ body{
     color: #fff;
 }
 
-#username{
-    position: absolute;
-    top: calc(50% - 24px);
-    left: 50%;
-    width: 150px;
-    height: 36px;
-    transform: translate(-50%, 0%);
-
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
-    background-color: #444;
-    color: #fff;
-    text-align: center;
-}
-
-#login_button{
-    position: absolute;
-    top: calc(50% + 24px);
-    left: 50%;
-    width: 154px;
-    height: 38px;
-    transform: translate(-50%, 0%);
-
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
-    background-color: #007bff;
-    color: #fff;
-    text-align: center;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-#welcome_text{
-    position: absolute;
-    top: calc(50% - 180px);
-    left: 50%;
-    width: 100%;
-    transform: translate(-50%, 0%);
-    font-size: 32px;
-    text-align: center;
-    align-items: center;
-    align-content: center;
-    align-self: center;
-}
-
-#welcome{
-    font-family: Work Sans sans-serif;
-    font-size: 80px;
-    background: linear-gradient(to right, #872cda, #6f39d1, #5940c5, #4643b8, #3545aa);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
 button{
     border: none;
     border-radius: 5px;
@@ -68,6 +12,135 @@ button{
     font-size: 16px;
     cursor: pointer;
     box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+}
+
+#username{
+    position: absolute;
+    top: calc(50% - 98px);
+    left: 50%;
+    width: 280px;
+    height: 40px;
+    transform: translate(-50%, 0%);
+
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    font-family: "Work Sans" sans-serif;
+    font-size: 30px;
+}
+
+#password_input{
+    position: absolute;
+    top: calc(50% - 48px);
+    left: 50%;
+    width: 284px;
+    height: 42px;
+    transform: translate(-50%, 0%);
+
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    font-family: "Work Sans" sans-serif;
+    font-size: 30px;
+}
+
+#password{
+    position: fixed;
+    height: 38px;
+    width: 235px;
+    background-color: transparent;
+    left: 0px;
+    top: 0px;
+
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    text-align: center;
+    font-family: "Work Sans" sans-serif;
+    font-size: 30px;
+    box-shadow: none;
+}
+
+#password_visibility_button{
+    position: fixed;
+    width: 42px;
+    height: 42px;
+    top: 0%;
+    right: 0%;
+}
+
+#login_button{
+    position: absolute;
+    top: calc(50% + 0px);
+    left: 50%;
+    width: 284px;
+    height: 42px;
+    transform: translate(-50%, 0%);
+
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.2);
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: "Work Sans" sans-serif;
+    font-size: 30px;
+}
+
+#welcome_text{
+    position: absolute;
+    font-family: "Work Sans" sans-serif;
+    font-size: 120px;
+    background: linear-gradient(to right, #872cda, #6f39d1, #5940c5, #4643b8, #3545aa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    top: calc(50% - 280px);
+    left: 50%;
+    width: 100%;
+    transform: translate(-50%, 0%);
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    align-self: center;
+}
+
+.line{
+    position: absolute;
+    top: calc(50% + 120px);
+    width: 40%;
+    border: 1px solid #868484;
+}
+
+#line-text{
+    position: absolute;
+    top: calc(50% + 102.5px);
+    left: 50%;
+    width: 100%;
+    height: 50px;
+    transform: translate(-50%, 0%);
+    background-color: transparent;
+    color: #868484;
+    text-align: center;
+    font-size: 30px;
+}
+
+#line-left{
+    right: calc(50% + 35px);
+    width: min(500px, calc(50% - 35px - 7.5%));
+}
+
+#line-right{
+    left: calc(50% + 35px);
+    width: min(500px, calc(50% - 35px - 7.5%));
 }
   
   /* Hover effect for buttons */

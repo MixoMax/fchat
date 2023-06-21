@@ -129,13 +129,7 @@ function sendMessage(chat_id, sender, message, password) {
     clearChat(chat_id, password);
   }
 
-  function login() {
-    const sender = document.getElementById("username").value;
-    //save username in local storage
-    localStorage.setItem("username", sender);
-    //redirect to chat page
-    window.location.replace("/chat");
-  }
+  
 
   async function change_chat() {
     let chat_id = document.getElementById("chat_id").value;

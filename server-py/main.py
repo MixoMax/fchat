@@ -69,6 +69,10 @@ def index():
 def serve_js():
     return app.send_static_file('main.js'), {'Content-Type': 'text/javascript'}
 
+@app.route('/login.js')
+def serve_login_js():
+    return app.send_static_file('login.js'), {'Content-Type': 'text/javascript'}
+
 @app.route("/favicon.ico")
 def favicon():
     return app.send_static_file("favicon.ico")
