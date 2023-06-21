@@ -149,7 +149,7 @@ def get():
     
     chat_id = request.form['chat_id']
     password = request.form['password']
-    if not check_password(password, chat_id):
+    if not check_password(password, chat_id)[0]:
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
     if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
