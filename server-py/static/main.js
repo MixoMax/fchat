@@ -51,10 +51,15 @@ function sendMessage(chat_id, sender, message, password) {
       method: 'POST',
       body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Messages:', data);
-      return data;
+    .then(response => {
+      console.log(response)
+      if(response.status == 200) {
+        return response.json().then(data => {	
+          return data;
+        });
+      } else {
+        return response.status;
+      }
     })
     .catch(error => {
       console.error('Error getting messages:', error);
@@ -103,6 +108,7 @@ function sendMessage(chat_id, sender, message, password) {
     createChat(chat_id, password);
   }
 
+  // Function is never called
   function get() {
     chat_id = localStorage.getItem("chat_id");
     password = localStorage.getItem("password");
@@ -136,10 +142,7 @@ function sendMessage(chat_id, sender, message, password) {
     let password = document.getElementById("chat_password").value;
     if(chat_id == "" || password == "") return;
 
-    document.getElementById("chat_id").value = "";
-    document.getElementById("chat_password").value = "";
-    document.getElementById("chat_name").innerHTML = "";
-    document.getElementById("message_input").placeholder = "Send a message in " + chat_id;
+    
 
     localStorage.setItem("chat_id", chat_id);
     localStorage.setItem("password", password);
@@ -147,8 +150,14 @@ function sendMessage(chat_id, sender, message, password) {
     console.log(chat_id, password)
       
     //print message_list to div id="message_list"
-    update_chat();
-    
+    if(!update_chat()){
+      return
+    }else{
+      document.getElementById("chat_id").value = "";
+      document.getElementById("chat_password").value = "";
+      document.getElementById("chat_name").innerHTML = "";
+      document.getElementById("message_input").placeholder = "Send a message in " + chat_id;
+    }
   }
   
   async function update_chat() {
@@ -157,43 +166,46 @@ function sendMessage(chat_id, sender, message, password) {
       let password = localStorage.getItem("password");
       let user = localStorage.getItem("username");
       let message_list = await getMessages(chat_id, password);
-      let message_list_html = "";
-      for (let i = 0; i < message_list.length; i++) {
-        let message = message_list[i];
-        let time_delta = Math.floor(Date.now() / 1000) - message[2];
-        let time_string = "";
-        if (time_delta < 60) {
-          time_string = time_delta + "s";
-        } else if (time_delta < 3600) {
-          time_string = Math.floor(time_delta / 60) + "m";
-        } else if (time_delta < 86400) {
-          time_string = Math.floor(time_delta / 3600) + "h";
-        } else {
-          time_string = Math.floor(time_delta / 86400) + "d";
-        }
-        message[2] = time_string;
-        if (message[0] == user) {
-          message[0] = "You";
-        }
-        if (message[0] == "You") {
+      if(message_list != 401 && message_list != 404){
+        let message_list_html = "";
+        for (let i = 0; i < message_list.length; i++) {  m
+          let message = message_list[i];
+          let time_delta = Math.floor(Date.now() / 1000) - message[2];
+          let time_string = "";
+          if (time_delta < 60) {
+            time_string = time_delta + "s";
+          } else if (time_delta < 3600) {
+            time_string = Math.floor(time_delta / 60) + "m";
+          } else if (time_delta < 86400) {
+            time_string = Math.floor(time_delta / 3600) + "h";
+          } else {
+            time_string = Math.floor(time_delta / 86400) + "d";
+          }
+          message[2] = time_string;
+          if (message[0] == user) {
+            message[0] = "You";
+          }
+          if (message[0] == "You") {
+            message_html = `
+            <div class="message">
+              <div class="user_sender">${message[0]}, ${message[2]}</div>
+              <div class="user_text">${message[1]}</div>
+            </div>`
+          } else {
+            
           message_html = `
-          <div class="message">
-            <div class="user_sender">${message[0]}, ${message[2]}</div>
-            <div class="user_text">${message[1]}</div>
-          </div>`
-        } else {
-          
-        message_html = `
-          <div class="message">
-            <div class="sender">${message[0]}, ${message[2]}</div>
-            <div class="text">${message[1]}</div>
-          </div>
-        `;}
-        message_list_html += message_html;
-      }
-      const message_list_div = document.getElementById("message_list");
-      message_list_div.innerHTML = message_list_html;
-      message_list_div.scrollTop = message_list_div.scrollHeight - message_list_div.clientHeight;
+            <div class="message">
+              <div class="sender">${message[0]}, ${message[2]}</div>
+              <div class="text">${message[1]}</div>
+            </div>
+          `;}
+          message_list_html += message_html;
+        }
+        const message_list_div = document.getElementById("message_list");
+        message_list_div.innerHTML = message_list_html;
+        message_list_div.scrollTop = message_list_div.scrollHeight - message_list_div.clientHeight;
+        return true;
+      }else return false;
     } catch (error) {
       console.error('Error:', error);
     }
