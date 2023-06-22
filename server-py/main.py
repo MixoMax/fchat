@@ -106,10 +106,10 @@ def send():
     
     if not check_password(password, chat_id):
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
-    if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
+    if not file_exists("./data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
     else:
-        file_path = "./server-py/data/" + chat_id + "/chat.csv"
+        file_path = "./data/" + chat_id + "/chat.csv"
         
         with open(file_path, 'a', newline="") as f:
             writer = csv.writer(f)
@@ -129,11 +129,11 @@ def new_chat():
     else:
         password = hashlib.sha256(password.encode()).hexdigest()
     
-    if file_exists("./server-py/data/" + chat_id + "/info.txt"):
+    if file_exists("./data/" + chat_id + "/info.txt"):
         return "chat already exists", 409 #conflict
     
-    file_path = "./server-py/data/"
-    os.mkdir(file_path + chat_id)
+    file_path = "./data/"
+    os.makedirs(file_path + chat_id)
     
     with open(file_path + chat_id + "/info.txt", 'w') as f:
         f.write(password)
@@ -155,10 +155,10 @@ def get():
     password = request.form['password']
     if not check_password(password, chat_id)[0]:
         return "wrong password", check_password(password, chat_id)[1] #unauthorized or not found
-    if not file_exists("./server-py/data/" + chat_id + "/info.txt"):
+    if not file_exists("./data/" + chat_id + "/info.txt"):
         return "chat does not exist", 404 #not found
     else:
-        file_path = "./server-py/data/" + chat_id + "/chat.csv"
+        file_path = "./data/" + chat_id + "/chat.csv"
         
         with open(file_path, 'r') as f:
             reader = csv.reader(f)
