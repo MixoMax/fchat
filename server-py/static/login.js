@@ -14,6 +14,7 @@ function change_password_visibility(){
 
 function login_on_enter(event) {
     if (event.keyCode == 13) {
+        console.log("enter")
         login();
     }
 }

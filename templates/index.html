@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Send Message</title>
+  </head>
+  <body>
+    <label for="chat_id">Chat ID:</label>
+    <input type="text" id="chat_id"><br>
+    <label for="sender">Sender:</label>
+    <input type="text" id="sender"><br>
+    <label for="content">Content:</label>
+    <input type="text" id="content"><br>
+    <label for="response_to">Response To:</label>
+    <input type="text" id="response_to"><br>
+    <button onclick="sendMessage()">Send Message</button>
+    <script>
+      function sendMessage() {
+        const chat_id = document.getElementById("chat_id").value;
+        const sender = document.getElementById("sender").value;
+        const content = document.getElementById("content").value;
+        const response_to = document.getElementById("response_to").value;
+        const data = {
+          chat_id: chat_id,
+          sender: sender,
+          content: content,
+          response_to: response_to
+        };
+        fetch('/api/send_message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+      }
+    </script>
+  </body>
+</html>
