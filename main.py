@@ -29,7 +29,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
         )""")
 
 connection.commit()
-connection.close()
 
 
 class Encrypted_text:
@@ -90,19 +89,27 @@ class Chat:
         self.users = []
         self.admins = []
         self.messages = []
+        self.chat_id = 0
     
     def create(self, chat_name, chat_password):
         self.chat_name = chat_name
         self.chat_password = chat_password
         
-        cursor.execute("CREATE TABLE IF NOT EXISTS :messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)", {"messages": self.chat_id + "_messages"})
         cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
+        connection.commit()
+
+        self.chat_id = cursor.execute("SELECT chat_id FROM chats WHERE chat_id = (SELECT MAX(chat_id) FROM chats)").fetchone()[0]
+
+        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)"
+        cursor.execute(sql_cmd)
+        
         connection.commit()
 
         return self        
     
     def append_message(self, message):
-        cursor.execute("INSERT INTO :messages (chat_id, sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)", {"messages": self.chat_id + "_messages", "sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
+        sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
+        cursor.execute(sql_cmd)
         connection.commit()
     
     def append_user(self, user):
@@ -157,7 +164,8 @@ def index():
 def get_chat(chat_id):
     connection = sqlite3.connect("database.db")
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM chats WHERE chat_id = :chat_id", {"chat_id": chat_id})
+    sql_cmd = "SELECT * FROM chats WHERE chat_id = messages" + str(chat_id)
+    cursor.execute(sql_cmd)
     messages = cursor.fetchall()
     if len(messages) == 0:
         return jsonify({"error": "Chat not found"})
@@ -168,6 +176,8 @@ def get_chat(chat_id):
 def create_chat(chat_name, chat_password):
     chat = Chat().create(chat_name, chat_password)
     return jsonify(chat.to_json())
+ 
+create_chat("test", "test")
 
 @app.route("/api/send_message", methods=["POST"])
 def send_message():
