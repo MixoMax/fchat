@@ -109,7 +109,7 @@ class Chat:
     
     def append_message(self, message):
         sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
-        cursor.execute(sql_cmd)
+        cursor.execute(sql_cmd, {"sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
         connection.commit()
     
     def append_user(self, user):
@@ -189,6 +189,8 @@ def send_message():
     content = data["content"]
     response_to = data["response_to"] if "response_to" in data else None
     
-    cursor.execute("INSERT INTO :messages (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)", {"messages": chat_id + "_messages", "sender": sender, "content": content, "timestamp": int(time.time()), "response_to": response_to})
+    sql_cmd = "INSERT INTO messages" + str(chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
+    cursor.execute(sql_cmd, {"sender": sender, "content": content, "timestamp": int(time.time()), "response_to": response_to})
+    connection.commit()
 
 app.run(port=5000, debug=True)
