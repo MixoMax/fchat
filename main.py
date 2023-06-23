@@ -3,13 +3,32 @@ from dataclasses import dataclass
 import os
 import time
 import csv
+import sqlite3
 import requests
 import hashlib
 
-# TODO:
 app = Flask(__name__)
+connection = sqlite3.connect("server-py/data/data.db")
+cursor = connection.cursor()
 
 
+cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT,
+        last_online INTEGER,
+        chat_ids TEXT
+    )""")
+
+cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
+        chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_name TEXT,
+        chat_password TEXT,
+        users TEXT,
+        admins TEXT
+        )""")
+
+connection.commit()
 
 
 class Encrypted_text:
@@ -35,20 +54,13 @@ class Encrypted_text:
 class User:
         
     def __init__(self, username, password) -> None:
-        csv_path = "./data/users.csv"
-
         self.username = username
         self.password = password
-        
-        with open(csv_path, "r") as csv_file:
-            csv_data = list(csv.reader(csv_file))
-            self.user_id = csv_data[-1][0] + 1
         self.last_online = int(time.time())
-        
-        user_data = [self.user_id, self.username, self.password, self.last_online]
-        with open(csv_path, "a") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(user_data)
+        self.chat_ids = []
+
+        cursor.execute("INSERT INTO users (username, password, last_online, chat_ids) VALUES (:username, :password, :last_online, :chat_ids)", {"username": self.username, "password": self.password, "last_online": self.last_online, "chat_ids": str(self.chat_ids)})
+        connection.commit()
         
     
     def __str__(self) -> str:
@@ -59,12 +71,13 @@ class User:
             "username": self.username,
             "user_id": self.user_id,
             "password": self.password,
-            "last_online": self.last_online
+            "last_online": self.last_online,
+            "chat_ids": self.chat_ids
         }
         return j
     
     def add_chat(self, chat):
-        self.chats.append(chat)
+        self.chat_ids.append(chat)
     
     def update_last_online(self):
         self.last_online = int(time.time())
@@ -74,47 +87,28 @@ class Chat:
         self.chat_name: str = ""
         self.chat_password: str = ""
         self.users = []
+        self.admins = []
         self.messages = []
-        
-    def from_csv(self, csv_path):
-        self.csv_path = csv_path
-        with open(csv_path, "r") as csv_file:
-            csv_reader = csv.reader(csv_file)
-            for idx, row in enumerate(csv_reader):
-                if idx == 0:
-                    self.chat_id = row[0]
-                    self.chat_name = row[1]
-                    self.chat_password = row[2]
-                else:
-                    self.messages.append(row)
-        
-        return self
     
-    def create(self, chat_id, chat_name, chat_password):
-        self.chat_id = chat_id
+    def create(self, chat_name, chat_password):
         self.chat_name = chat_name
         self.chat_password = chat_password
         
-        self.csv_path = "./data/chats/" + self.chat_id + ".csv"
-        
-        os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
-        
-        with open(self.csv_path, "w") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow([self.chat_id, self.chat_name, self.chat_password])
-        
+        cursor.execute("CREATE TABLE IF NOT EXISTS :messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)", {"messages": self.chat_id + "_messages"})
+        cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
+        connection.commit()
+
         return self        
     
     def append_message(self, message):
-        message_data = [message.message_id, message.sender, message.content, message.timestamp, message.response_to]
-        self.messages.append(message_data)
-        with open(self.csv_path, "a") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(message_data)
+        cursor.execute("INSERT INTO :messages (chat_id, sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)", {"messages": self.chat_id + "_messages", "sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
+        connection.commit()
     
     def append_user(self, user):
         user_id = user.user_id
         self.users.append(user_id)
+        cursor.execute("UPDATE chats SET users = :users WHERE chat_id = :chat_id", {"users": str(self.users), "chat_id": self.chat_id})
+        connection.commit()
 
     def __str__(self) -> str:
         return self.chat_name
@@ -127,7 +121,8 @@ class Chat:
             "chat_name": self.chat_name,
             "chat_password": self.chat_password,
             "messages": messages,
-            "users": users
+            "users": users,
+            "admins": self.admins
         }
         return j
 
@@ -138,15 +133,6 @@ class Message:
         self.content = content
         self.timestamp = int(time.time())
         self.response_to = response_to
-        
-        csv_path = "./data/chats/" + chat_id + ".csv"
-        
-        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-        
-        try:
-            self.message_id = int(list(csv.reader(open(csv_path, "r")))[-1][0]) + 1
-        except:
-            self.message_id = 0
     
     
     def __str__(self) -> str:
@@ -168,18 +154,16 @@ def index():
 
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
-    chat_csv = "./data/chats/" + chat_id + ".csv"
-    messages = []
-    with open(chat_csv, "r") as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for row in csv_reader:
-            messages.append(row)
-    
-    return jsonify(messages)
+    cursor.execute("SELECT * FROM chats WHERE chat_id = :chat_id", {"chat_id": chat_id})
+    messages = cursor.fetchall()
+    if len(messages) == 0:
+        return jsonify({"error": "Chat not found"})
+    else:
+        return jsonify(messages)
 
-@app.route("/api/create_chat/<chat_id>/<chat_name>/<chat_password>")
-def create_chat(chat_id, chat_name, chat_password):
-    chat = Chat().create(chat_id, chat_name, chat_password)
+@app.route("/api/create_chat/<chat_name>/<chat_password>")
+def create_chat(chat_name, chat_password):
+    chat = Chat().create(chat_name, chat_password)
     return jsonify(chat.to_json())
 
 @app.route("/api/send_message", methods=["POST"])
@@ -190,14 +174,6 @@ def send_message():
     content = data["content"]
     response_to = data["response_to"] if "response_to" in data else None
     
-    m = Message(chat_id, sender, content, response_to)
-    
-    csv_path = "./data/chats/" + chat_id + ".csv"
-    if os.path.exists(csv_path):
-        c = Chat().from_csv(csv_path)
-        c.append_message(m)
-        return jsonify(m.to_json())
-    else:
-        return jsonify({"error": "Chat does not exist"})
+    cursor.execute("INSERT INTO :messages (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)", {"messages": chat_id + "_messages", "sender": sender, "content": content, "timestamp": int(time.time()), "response_to": response_to})
 
 app.run(port=5000, debug=True)
