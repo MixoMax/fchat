@@ -8,7 +8,7 @@ import requests
 import hashlib
 
 app = Flask(__name__)
-connection = sqlite3.connect("server-py/data/data.db")
+connection = sqlite3.connect("data/database.db")
 cursor = connection.cursor()
 
 
@@ -29,6 +29,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
         )""")
 
 connection.commit()
+connection.close()
 
 
 class Encrypted_text:
@@ -154,6 +155,8 @@ def index():
 
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
+    connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
     cursor.execute("SELECT * FROM chats WHERE chat_id = :chat_id", {"chat_id": chat_id})
     messages = cursor.fetchall()
     if len(messages) == 0:
@@ -168,6 +171,8 @@ def create_chat(chat_name, chat_password):
 
 @app.route("/api/send_message", methods=["POST"])
 def send_message():
+    connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
     data = request.get_json()
     chat_id = data["chat_id"]
     sender = data["sender"]
