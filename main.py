@@ -92,6 +92,8 @@ class Chat:
         self.chat_id = 0
     
     def create(self, chat_name, chat_password):
+        connection = sqlite3.connect("data/database.db")
+        cursor = connection.cursor()
         self.chat_name = chat_name
         self.chat_password = chat_password
         
@@ -162,13 +164,13 @@ def index():
 
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
-    connection = sqlite3.connect("database.db")
+    connection = sqlite3.connect("data/database.db")
     cursor = connection.cursor()
-    sql_cmd = "SELECT * FROM chats WHERE chat_id = messages" + str(chat_id)
+    sql_cmd = "SELECT * FROM messages" + str(chat_id)
     cursor.execute(sql_cmd)
     messages = cursor.fetchall()
     if len(messages) == 0:
-        return jsonify({"error": "Chat not found"})
+        return jsonify({"error": "No messages!"})
     else:
         return jsonify(messages)
 
@@ -176,12 +178,10 @@ def get_chat(chat_id):
 def create_chat(chat_name, chat_password):
     chat = Chat().create(chat_name, chat_password)
     return jsonify(chat.to_json())
- 
-create_chat("test", "test")
 
 @app.route("/api/send_message", methods=["POST"])
 def send_message():
-    connection = sqlite3.connect("database.db")
+    connection = sqlite3.connect("data/database.db")
     cursor = connection.cursor()
     data = request.get_json()
     chat_id = data["chat_id"]
@@ -192,5 +192,6 @@ def send_message():
     sql_cmd = "INSERT INTO messages" + str(chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
     cursor.execute(sql_cmd, {"sender": sender, "content": content, "timestamp": int(time.time()), "response_to": response_to})
     connection.commit()
+    return jsonify({"success": True}), 200
 
-app.run(port=5000, debug=True)
+app.run(host="0.0.0.0", port=80)

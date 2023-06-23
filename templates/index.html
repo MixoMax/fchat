@@ -13,30 +13,56 @@
     <input type="text" id="content"><br>
     <label for="response_to">Response To:</label>
     <input type="text" id="response_to"><br>
+    <label for="chat_name">Chat Name:</label>
+    <input type="text" id="chat_name"><br>
+    <label for="chat_password">Chat Password:</label>
+    <input type="text" id="chat_password"><br>
+    <br>
     <button onclick="sendMessage()">Send Message</button>
+    <button onclick="get_chat(document.getElementById('chat_id').value)">Get Chat</button>
+    <button onclick="create_chat(document.getElementById('chat_name').value, document.getElementById('chat_password').value)">Create Chat</button>
     <script>
-      function sendMessage() {
-        const chat_id = document.getElementById("chat_id").value;
-        const sender = document.getElementById("sender").value;
-        const content = document.getElementById("content").value;
-        const response_to = document.getElementById("response_to").value;
-        const data = {
-          chat_id: chat_id,
-          sender: sender,
-          content: content,
-          response_to: response_to
+      //apis:
+      //"/api/get_chat/<chat_id>"
+      //"/api/create_chat/<chat_name>/<chat_password>"
+      //"/api/send_message" (POST) {"chat_id", "sender", "content", "response_to"}
+
+      function get_chat(chat_id) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200)
+            return this.responseText;
         };
-        fetch('/api/send_message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
+        xhttp.open("GET", "/api/get_chat/" + chat_id, true);
+        xhttp.send();
+      }
+
+      function create_chat(chat_name, chat_password) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200)
+            return this.responseText;
+        };
+        xhttp.open("GET", "/api/create_chat/" + chat_name + "/" + chat_password, true);
+        xhttp.send();
+      }
+
+      function sendMessage() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200)
+            return this.responseText;
+        };
+        xhttp.open("POST", "/api/send_message", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send(JSON.stringify({
+          "chat_id": document.getElementById("chat_id").value,
+          "sender": document.getElementById("sender").value,
+          "content": document.getElementById("content").value,
+          "response_to": document.getElementById("response_to").value
+        }));
       }
     </script>
   </body>
+  
 </html>
