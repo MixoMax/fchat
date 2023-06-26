@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory, redirect, url_for
 from dataclasses import dataclass
 import os
 import time
@@ -137,11 +137,11 @@ class Chat:
         return j
 
 class Message:
-    def __init__(self, chat_id, sender, content, response_to = None):
-        self.chat_id = chat_id
+    def __init__(self, message_id, sender, content, timestamp = None,  response_to = None):
+        self.message_id = message_id
         self.sender = sender
         self.content = content
-        self.timestamp = int(time.time())
+        self.timestamp = int(time.time()) if timestamp == None else timestamp
         self.response_to = response_to
     
     
@@ -162,6 +162,12 @@ class Message:
 def index():
     return render_template("index.html")
 
+@app.route("/static/<path:path>")
+def static_files(path):
+    print("serving " + path)
+    return send_from_directory("static", path)
+
+
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
     connection = sqlite3.connect("data/database.db")
@@ -169,6 +175,7 @@ def get_chat(chat_id):
     sql_cmd = "SELECT * FROM messages" + str(chat_id)
     cursor.execute(sql_cmd)
     messages = cursor.fetchall()
+    messages = [Message(m[0], m[1], m[2], m[3], m[4]).to_json() for m in messages]
     if len(messages) == 0:
         return jsonify({"error": "No messages!"})
     else:

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Send Message</title>
+    <link rel="stylesheet" href="static/css/style.css">
   </head>
   <body>
     <label for="chat_id">Chat ID:</label>
@@ -31,7 +32,8 @@
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200)
-            return this.responseText;
+            var chat_array = JSON.parse(this.responseText);
+            render_chat(chat_array);
         };
         xhttp.open("GET", "/api/get_chat/" + chat_id, true);
         xhttp.send();
@@ -62,7 +64,23 @@
           "response_to": document.getElementById("response_to").value
         }));
       }
+      try {
+        var chat_div = document.getElementById("chat");
+        function render_chat(message_array) {
+          for (var i = 0; i < message_array.length; i++) {
+            var message = message_array[i]; //dict {"content", "message_id", "sender", "response_to", "timestamp"}
+            console.log(message);
+            var message_div = document.createElement("div");
+            message_div.innerHTML = message["content"];
+          }
+        }
+      } catch (e) {
+        console.log(e);
+      }
     </script>
-  </body>
+  
+    <div id="chat"></div>
+
+</body>
   
 </html>
