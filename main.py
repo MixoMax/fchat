@@ -98,7 +98,7 @@ class Chat:
         connection = sqlite3.connect("data/database.db")
         cursor = connection.cursor()
         self.chat_name = chat_name
-        self.chat_password = str(Encrypted_text().encrypt(chat_name, chat_password))
+        self.chat_password = chat_password #str(Encrypted_text().encrypt(chat_name, chat_password))
         
         cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
         connection.commit()

@@ -3,10 +3,14 @@
 //"/api/create_chat/<chat_name>/<chat_password>"
 //"/api/send_message" (POST) {"chat_id", "sender", "content", "response_to"}
 
-const chat_div = document.getElementById("chat_div")
+const chat = document.getElementById('chat_id')
 
-function get_chat(chat_id) {
+console.log("chat.js loaded")
+
+function get_chat() {
     //get json object from request
+
+    const chat_id = document.getElementById('chat_id').value
     
     fetch("/api/get_chat/" + chat_id).then(async response => {
         let chat_array = await response.json()
@@ -25,12 +29,29 @@ class Message {
         this.response_to = response_to
     }
     append_to_div() {
-        let html_string = `<div class="Message"><p id="sender">` + this.sender + `<\p><p id="timestamp">` + this.timestamp + `<\p><p id="content">` + this.content + `<\p>`
+        const chat_div = document.getElementById("chat_div")
+        const date = new Date(this.timestamp * 1000)
+        this.timestamp = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds()
+
+
+        let html_string = `<div class="incoming_message" id="${"message" + this.message_id}"><p class="message_sender">${this.sender}<\p><p class="message_timestamp">${this.timestamp}<\p><p class="message_content">${this.content}<\p>`
         if (this.response_to != null) {
             html_string += `<p id="response_to">` + this.response_to + `<\p>`
         }
         html_string += `</div>`
         chat_div.innerHTML += html_string
+
+        let messageDiv = document.getElementById("message" + this.message_id)
+        let senderElement = messageDiv.querySelector(".message_sender")
+        let contentElement = messageDiv.querySelector(".message_content")
+        console.log(contentElement.style.fontFamily)
+        //make the width of the message fit the text or sender depending on whats longer but also maxiamal 80%
+        let message_width = Math.max(senderElement.textContent.length, senderElement.textContent.length)
+        console.log("1", senderElement.textContent.length, "2", contentElement.textContent.length, "3", message_width, "4", window.innerWidth)
+        messageDiv.style.width = Math.min(message_width * 20 + 20, 0.64 * window.innerWidth) + "px"
+        
+        
+        messageDiv.style.height = "auto"
     }
     toString() {
         let str = `Message: (id: ${this.message_id}, sender: ${this.message_id}, content: ${this.content}, timestamp: ${this.timestamp})`
@@ -48,16 +69,33 @@ function update_chat(chat_array) {
     console.log("done")
 }
 
-function create_chat(chat_name, chat_password) {
-    //make get request to "/api/create_chat/<chat_name>/<chat_password>"
+function create_chat() {
+
+    const chat_name = document.getElementById("chat_name").value
+    const chat_password = document.getElementById("chat_password").value
+
+    if(chat_name == "" || chat_password == "") {
+        alert("Please enter a chat name and password")
+        return
+    }
 
     fetch("/api/create_chat/" + chat_name + "/" + chat_password).then(response => {
         console.log(response.status)
     })
 }
 
-function send_message(chat_id, sender, content, response_to = null) {
-    //make post request to /api/send_message
+function send_message() {
+
+    const chat_id = document.getElementById('chat_id').value
+    const sender = document.getElementById('sender').value
+    const content = document.getElementById('content').value
+    const response_to = document.getElementById('response_to').value || null
+
+    if(chat_id == "" || sender == "" || content == "") {
+        alert("Please enter a chat id, sender, and content")
+        return
+    }
+
 
     let payload = {"chat_id": chat_id, "sender": sender, "content": content, "response_to": response_to}
     fetch("/api/send_message", {
