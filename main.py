@@ -47,6 +47,9 @@ class Encrypted_text:
             output += chr(ord(char) - key)
         return output
 
+    def __eq__(self, __value: object) -> bool:
+        return self.text == __value.text
+    
     def __str__(self) -> str:
         return self.text
 
@@ -95,7 +98,7 @@ class Chat:
         connection = sqlite3.connect("data/database.db")
         cursor = connection.cursor()
         self.chat_name = chat_name
-        self.chat_password = chat_password
+        self.chat_password = str(Encrypted_text().encrypt(chat_name, chat_password))
         
         cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
         connection.commit()
@@ -119,6 +122,10 @@ class Chat:
         self.users.append(user_id)
         cursor.execute("UPDATE chats SET users = :users WHERE chat_id = :chat_id", {"users": str(self.users), "chat_id": self.chat_id})
         connection.commit()
+    
+    def check_password(self, password):
+        print(self.chat_name, str(Encrypted_text().decrypt(self.chat_password, password)))
+        return self.chat_name == str(Encrypted_text().decrypt(self.chat_password, password))
 
     def __str__(self) -> str:
         return self.chat_name
@@ -191,6 +198,7 @@ def send_message():
     connection = sqlite3.connect("data/database.db")
     cursor = connection.cursor()
     data = request.get_json()
+    print(data)
     chat_id = data["chat_id"]
     sender = data["sender"]
     content = data["content"]
