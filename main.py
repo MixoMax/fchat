@@ -175,6 +175,7 @@ def static_files(path):
     return send_from_directory("static", path)
 
 
+
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
     connection = sqlite3.connect("data/database.db")
@@ -209,4 +210,10 @@ def send_message():
     connection.commit()
     return jsonify({"success": True}), 200
 
-app.run(host="0.0.0.0", port=80)
+
+port = 80
+host = "0.0.0.0"
+
+print("running on " + "all adresses" if host == "0.0.0.0" else host + ":" + str(port))
+
+app.run(host=host, port=port)
