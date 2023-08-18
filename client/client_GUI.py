@@ -1,9 +1,10 @@
 from typing import Optional
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QGroupBox, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QGroupBox, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QPushButton, QScrollArea
 from PySide6.QtGui import QIcon, QFont
 import client_core as core
 
+import threading
 import time
 
 class Chat_Windows(QMainWindow):
@@ -36,10 +37,21 @@ class Chat_Windows(QMainWindow):
         self.username_input.setPlaceholderText("Username")
         self.top_layout.addRow(self.username_input)
         
-        #middle part
-        self.chat_history_widget = QWidget()
+        #scrollable chat history in the middle
+        self.chat_history_widget = QScrollArea()
         self.chat_history_layout = QVBoxLayout()
+        self.chat_history_widget.setWidgetResizable(True)
         self.chat_history_widget.setLayout(self.chat_history_layout)
+
+        self.chat_history_widget.setWidgetResizable(True)
+        self.chat_history_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.chat_history_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.chat_history_widget.setWidget(QWidget())
+        
+        self.chat_history_widget.widget().setLayout(self.chat_history_layout)
+        
+        
+        
         
         #bottom part
         #message input field in the left / middle, send and refresh buttons in the right
@@ -72,13 +84,18 @@ class Chat_Windows(QMainWindow):
         self.send_button.clicked.connect(self.send)
         self.refresh_button.clicked.connect(self.refresh_chat)
         
-    def refresh_chat(self):
+    def refresh_chat(self, scroll_to_bottom: bool = True):
         #get server url from input field
         server_url = "http://" + self.server_url_input.text()
         #get chat id from input field
         chat_id = self.chat_id_input.text()
         #get username from input field
         username = self.username_input.text()
+        
+        if self.server_url_input.text() == "":
+            return
+        if self.chat_id_input.text() == "":
+            return
         
         self.chat = core.Chat(server_url)
         self.chat.change_chat_id(chat_id)
@@ -89,6 +106,12 @@ class Chat_Windows(QMainWindow):
         
         for message in messages:
             self.add_message_to_chat_history(message)
+        
+        if scroll_to_bottom:
+            #scroll to the bottom of the chat history
+            self.chat_history_widget.verticalScrollBar().setValue(self.chat_history_widget.verticalScrollBar().maximum())
+            
+        self.chat_history_widget.update()
     
     def clear_chat_history(self):
         for i in reversed(range(self.chat_history_layout.count())):
@@ -113,10 +136,15 @@ class Chat_Windows(QMainWindow):
         
         sender_label = QLabel(sender)
         sender_label.setFont(QFont("Arial", 12))
+        sender_label.setMaximumWidth(100)
         message_layout.addWidget(sender_label)
         
-        content_label = QLabel(content)
+        
+        content_wraped = "\n".join(content[i:i+35] for i in range(0, len(content), 35))
+        
+        content_label = QLabel(content_wraped)
         content_label.setFont(QFont("Arial", 12))
+        content_label.setWordWrap(True)
         message_layout.addWidget(content_label)
         
         timestamp_label = QLabel(timestamp)
@@ -124,7 +152,7 @@ class Chat_Windows(QMainWindow):
         message_layout.addWidget(timestamp_label)
         
         self.chat_history_layout.addWidget(message_widget)
-        
+    
     def send(self):
         #get message from input field
         message = self.message_input.text()
@@ -143,8 +171,13 @@ class Chat_Windows(QMainWindow):
         
         chat.send_message(message)
 
+    def auto_refresh(self):
+        self.refresh_chat(False)
+        QTimer.singleShot(1000, self.auto_refresh)
+
 if __name__ == "__main__":
     app = QApplication([])
     window = Chat_Windows()
+    window.auto_refresh()
     window.show()
     app.exec()
