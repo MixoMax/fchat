@@ -78,4 +78,9 @@ class Chat:
         }
         if response_to != None:
             data["response_to"] = response_to
-        r = requests.post(api_url, json = data)
+        try:
+            r = requests.post(api_url, json = data)
+        except Exception as e:
+            
+            #return (success, reason)
+            return False

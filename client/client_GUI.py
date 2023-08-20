@@ -7,6 +7,8 @@ import client_core as core
 import threading
 import time
 
+
+
 class Chat_Windows(QMainWindow):
     chat = None
     def __init__(self):
@@ -84,6 +86,8 @@ class Chat_Windows(QMainWindow):
         self.send_button.clicked.connect(self.send)
         self.refresh_button.clicked.connect(self.refresh_chat)
         
+        self.last_sender = ""
+        
     def refresh_chat(self, scroll_to_bottom: bool = True):
         #get server url from input field
         server_url = "http://" + self.server_url_input.text()
@@ -124,20 +128,66 @@ class Chat_Windows(QMainWindow):
         if timedelta < 60:
             timestamp = str(int(timedelta)) + " seconds ago"
         elif timedelta < 3600:
-            timestamp = str(int(timedelta / 60)) + " minutes ago"
+            timestamp = str(int(timedelta // 60)) + " minutes ago"
         elif timedelta < 86400:
-            timestamp = str(int(timedelta / 3600)) + " hours ago"
+            timestamp = str(int(timedelta // 3600)) + " hours ago"
         else:
-            timestamp = str(int(timedelta / 86400)) + " days ago"
+            timestamp = str(int(timedelta // 86400)) + " days ago"
         
         message_widget = QWidget()
-        message_layout = QHBoxLayout()
+        message_layout = QVBoxLayout()
+        #top: sender and timestamp
+        #sender in the top left, timestamp in the top right
+        #bottom: message content
         message_widget.setLayout(message_layout)
         
-        sender_label = QLabel(sender)
+        
+        top_widget = QWidget()
+        top_layout = QHBoxLayout()
+        
+        if sender == self.last_sender:
+            sender_label = QLabel("")
+        else:
+            sender_label = QLabel(sender)
         sender_label.setFont(QFont("Arial", 12))
         sender_label.setMaximumWidth(100)
-        message_layout.addWidget(sender_label)
+        
+        #sender name should be in the top left corner
+        sender_label.setStyleSheet("""
+                                    position: absolute;
+                                    top: 8px;
+                                    left: 8px;
+                                   """)
+        
+        sender_label.setAlignment(Qt.AlignLeft)
+        sender_label.update()
+        
+        self.last_sender = sender
+        
+        top_layout.addWidget(sender_label)
+        
+        timestamp_label = QLabel(timestamp)
+        timestamp_label.setFont(QFont("Arial", 8))
+        
+        timestamp_label.setStyleSheet("""
+                                        position: absolute;
+                                        top: 8px;
+                                        right: 8px;
+                                    """)
+        
+        top_layout.addWidget(timestamp_label)
+        
+        top_layout.setAlignment(Qt.AlignTop)
+        
+        top_widget.setLayout(top_layout)
+        
+        top_widget.setStyleSheet("""
+                                border-radius: 15px;
+                                padding: 5px;
+                                margin: 5px;
+                                
+                                """)
+        
         
         
         content_wraped = "\n".join(content[i:i+35] for i in range(0, len(content), 35))
@@ -145,11 +195,26 @@ class Chat_Windows(QMainWindow):
         content_label = QLabel(content_wraped)
         content_label.setFont(QFont("Arial", 12))
         content_label.setWordWrap(True)
+        
+        
+        message_layout.addWidget(top_widget)
         message_layout.addWidget(content_label)
         
-        timestamp_label = QLabel(timestamp)
-        timestamp_label.setFont(QFont("Arial", 12))
-        message_layout.addWidget(timestamp_label)
+        
+        
+        if sender == self.username_input.text():
+            color = "#008050"
+        else:
+            color = "#ababc4"
+            
+        message_widget.setStyleSheet(f"""
+                                    border-radius: 15px;
+                                    padding: 5px;
+                                    margin: 5px;
+                                    background-color: {color};
+                                    """)
+        
+        message_widget.update()
         
         self.chat_history_layout.addWidget(message_widget)
     
@@ -159,6 +224,8 @@ class Chat_Windows(QMainWindow):
         
         #get username from input field
         username = self.username_input.text()
+        if username == "":
+            return
         
         #get server url from input field
         server_url = "http://" + self.server_url_input.text()

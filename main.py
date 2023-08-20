@@ -175,6 +175,10 @@ def static_files(path):
     return send_from_directory("static", path)
 
 
+@app.route("/api/ping")
+def ping():
+    return jsonify({"status": "online"})
+
 
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
