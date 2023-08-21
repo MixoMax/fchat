@@ -7,6 +7,8 @@ import sqlite3
 import requests
 import hashlib
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 app = Flask(__name__)
 connection = sqlite3.connect("data/database.db")
 cursor = connection.cursor()
@@ -172,12 +174,15 @@ def index():
 @app.route("/static/<path:path>")
 def static_files(path):
     print("serving " + path)
-    return send_from_directory("static", path)
+    return send_from_directory("static", path), 200
 
+@app.route("/api/static/<path:path>")
+def temp_static_files(path):
+    return static_files(path)
 
 @app.route("/api/ping")
 def ping():
-    return jsonify({"status": "online"})
+    return "OK", 200
 
 
 @app.route("/api/get_chat/<chat_id>")
