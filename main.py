@@ -8,7 +8,7 @@ import requests
 import hashlib
 
 app = Flask(__name__)
-connection = sqlite3.connect("data/database.db")
+connection = sqlite3.connect("data/database.db", check_same_thread=False)
 cursor = connection.cursor()
 
 
@@ -30,6 +30,24 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
 
 connection.commit()
 
+def find_highest_chat_id():
+    cursor = connection.cursor()
+    cursor.execute("SELECT chat_id FROM chats")
+    chat_ids = cursor.fetchall()
+    chat_ids = [int(c[0]) for c in chat_ids]
+    if len(chat_ids) == 0:
+        return 0
+    else:
+        return max(chat_ids)
+
+def find_chat_id(chat_name):
+    curser = connection.cursor()
+    cursor.execute("SELECT chat_id FROM chats WHERE chat_name = :chat_name", {"chat_name": chat_name})
+    chat_id = cursor.fetchone()
+    if chat_id == None:
+        return None
+    else:
+        return chat_id[0]
 
 class Encrypted_text:
     def __init__(self) -> None:
@@ -85,37 +103,65 @@ class User:
     def update_last_online(self):
         self.last_online = int(time.time())
 
+
+def load_chat(chat_id) -> "Chat":
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM chats WHERE chat_id = :chat_id", {"chat_id": chat_id})
+    chat = cursor.fetchone()
+    if chat == None:
+        return None
+    chat = Chat(chat[1], chat[2])
+    chat.chat_id = chat_id
+    chat.users = chat[3]
+    chat.admins = chat[4]
+    return chat
+
 class Chat:
-    def __init__(self):
-        self.chat_name: str = ""
-        self.chat_password: str = ""
+    def __init__(self, chat_name, chat_password = "*") -> None:
+        self.chat_name: str = chat_name
+        self.chat_password: str = chat_password
         self.users = []
         self.admins = []
         self.messages = []
         self.chat_id = 0
+        self.last_send = int(time.time())
+        self.last_access = int(time.time())
+
+    def load(self, chat_id = None):
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        chat_id = find_chat_id(self.chat_name) if chat_id == None else chat_id
+        if chat_id == None:
+            return None, 404
+        sql_cmd = "SELECT * FROM messages" + str(chat_id)
+        self.chat_id = chat_id
+        cursor.execute(sql_cmd)
+        messages = cursor.fetchall()
+        messages = [Message(m[0], m[1], m[2], m[3], m[4]) for m in messages]
+        self.messages = messages
+        self.last_access = int(time.time())
+        print("loaded chat " + str(self.chat_id))
+        return self, 200
     
     def create(self, chat_name, chat_password):
-        connection = sqlite3.connect("data/database.db")
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
         cursor = connection.cursor()
         self.chat_name = chat_name
-        self.chat_password = chat_password #str(Encrypted_text().encrypt(chat_name, chat_password))
-        
-        cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
-        connection.commit()
-
-        self.chat_id = cursor.execute("SELECT chat_id FROM chats WHERE chat_id = (SELECT MAX(chat_id) FROM chats)").fetchone()[0]
-
-        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)"
+        self.chat_password = str(Encrypted_text().encrypt(chat_password, 5))
+        self.chat_id = find_highest_chat_id() + 1
+        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, content TEXT, timestamp INTEGER, response_to INTEGER)"
         cursor.execute(sql_cmd)
-        
         connection.commit()
-
-        return self        
+    
+    
     
     def append_message(self, message):
         sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
         cursor.execute(sql_cmd, {"sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
         connection.commit()
+        self.messages.append(message)
+        self.last_send = int(time.time())
     
     def append_user(self, user):
         user_id = user.user_id
@@ -141,7 +187,9 @@ class Chat:
             "users": users,
             "admins": self.admins
         }
+        self.last_access = int(time.time())
         return j
+
 
 class Message:
     def __init__(self, message_id, sender, content, timestamp = None,  response_to = None):
@@ -164,6 +212,17 @@ class Message:
             "response_to": self.response_to
         }
         return j
+
+global chat_dict
+chat_dict = {} #chat_id: Chat object
+
+def filter_chat_dict():
+    global chat_dict
+    for chat_id in chat_dict:
+        if int(time.time()) - chat_dict[chat_id].last_access > 60:
+            chat_dict.pop(chat_id)
+
+
 
 @app.route("/")
 def index():
@@ -188,36 +247,67 @@ def ping():
 
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
-    connection = sqlite3.connect("data/database.db")
-    cursor = connection.cursor()
-    sql_cmd = "SELECT * FROM messages" + str(chat_id)
-    cursor.execute(sql_cmd)
-    messages = cursor.fetchall()
-    messages = [Message(m[0], m[1], m[2], m[3], m[4]).to_json() for m in messages]
-    if len(messages) == 0:
-        return jsonify({"error": "No messages!"})
+    global chat_dict
+    filter_chat_dict()
+    if chat_id in chat_dict:
+        return jsonify(chat_dict[chat_id].to_json()), 200
     else:
-        return jsonify(messages)
+        try:
+            chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+        except Exception as e:
+            print(e)
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        return jsonify(chat_dict[chat_id].to_json()), 200        
+
+#temporary
+@app.route("/api/get_chat_uncached/<chat_id>/")
+def get_chat_uncached(chat_id):
+    chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+    if err_code == 404:
+        return jsonify({"success": False, "error": "Chat not found"}), 404
+    print("uncached called: len(messages) = " + str(len(chat.messages)))
+    return jsonify(chat.to_json()), 200
 
 @app.route("/api/create_chat/<chat_name>/<chat_password>")
 def create_chat(chat_name, chat_password):
-    chat = Chat().create(chat_name, chat_password)
-    return jsonify(chat.to_json())
+    global chat_dict
+    filter_chat_dict()
+    chat_id = find_chat_id(chat_name)
+    if chat_id != None:
+        return jsonify({"success": False, "error": "Chat already exists"}), 400
+    chat = Chat(chat_name, chat_password)
+    chat_dict[chat.chat_id] = chat
+    chat.create(chat_name, chat_password)
+    return jsonify({"success": True, "chat_id": chat.chat_id}), 200
 
 @app.route("/api/send_message", methods=["POST"])
 def send_message():
-    connection = sqlite3.connect("data/database.db")
-    cursor = connection.cursor()
+
     data = request.get_json()
-    print(data)
     chat_id = data["chat_id"]
+    chat_password = data.get("chat_password", "*")
     sender = data["sender"]
     content = data["content"]
     response_to = data["response_to"] if "response_to" in data else None
     
-    sql_cmd = "INSERT INTO messages" + str(chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
-    cursor.execute(sql_cmd, {"sender": sender, "content": content, "timestamp": int(time.time()), "response_to": response_to})
-    connection.commit()
+    global chat_dict
+    filter_chat_dict()
+    
+    if chat_id in chat_dict:
+        chat = chat_dict[chat_id]
+    else:
+        try:
+            chat, err_code = Chat(chat_id, chat_password).load(chat_id=chat_id)
+        except Exception as e:
+            print(e)
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat
+        
+    chat_dict[chat_id].append_message(Message(None, sender, content, response_to=response_to))
     return jsonify({"success": True}), 200
 
 app.run(host="0.0.0.0", port=80)

@@ -73,10 +73,6 @@ def create_requirements():
 def create_container():
     """Create the docker container"""
     #create the container for DOCKERFILE
-    
-    #os.system("docker build -t chat-app .")
-    # -> ERROR: failed to solve: failed to read dockerfile: open /var/lib/docker/tmp/buildkit-mount2236085287/Dockerfile: no such file or directory
-    
     try:
         subprocess.run(["docker", "build", "-t", "chat-app", "-f", "DOCKERFILE", "."], check=True, shell=True)
     except subprocess.CalledProcessError as e:
