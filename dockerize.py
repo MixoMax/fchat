@@ -39,8 +39,9 @@ def create_DOCKERFILE():
     #create the DOCKERFILE
     docker_file_path = "./DOCKERFILE"
     
+    #use python 3.10 slim
     docker_strings = [
-        "FROM python:3.10\n",
+        "FROM python:3.10-slim\n",
         "WORKDIR /app\n",
         
         "COPY requirements.txt ./\n",

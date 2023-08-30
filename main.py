@@ -155,13 +155,15 @@ class Chat:
     
     
     
-    def append_message(self, message):
+    def append_message(self, message: "Message"):
         sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
         connection = sqlite3.connect("data/database.db", check_same_thread=False)
         cursor.execute(sql_cmd, {"sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
         connection.commit()
+        connection.close()
         self.messages.append(message)
         self.last_send = int(time.time())
+        print("appended message to chat " + str(self.chat_id))
     
     def append_user(self, user):
         user_id = user.user_id
@@ -270,6 +272,22 @@ def get_chat_uncached(chat_id):
     print("uncached called: len(messages) = " + str(len(chat.messages)))
     return jsonify(chat.to_json()), 200
 
+@app.route("/api/get_chat_length/<chat_id>")
+def get_chat_length(chat_id):
+    global chat_dict
+    filter_chat_dict()
+    if chat_id in chat_dict:
+        return jsonify({"success": True, "length": len(chat_dict[chat_id].messages)}), 200
+    else:
+        try:
+            chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+        except Exception as e:
+            print(e)
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        return jsonify({"success": True, "length": len(chat.messages)}), 200
+
 @app.route("/api/create_chat/<chat_name>/<chat_password>")
 def create_chat(chat_name, chat_password):
     global chat_dict
@@ -296,6 +314,7 @@ def send_message():
     filter_chat_dict()
     
     if chat_id in chat_dict:
+        print("loaded from cache")
         chat = chat_dict[chat_id]
     else:
         try:
@@ -310,4 +329,6 @@ def send_message():
     chat_dict[chat_id].append_message(Message(None, sender, content, response_to=response_to))
     return jsonify({"success": True}), 200
 
-app.run(host="0.0.0.0", port=80)
+
+#run without multithreading
+app.run(host="0.0.0.0", port=80, threaded=False)
