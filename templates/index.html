@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <title>Send Message</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <script src="static/js/chat.js"></script>
   </head>
   <body>
     <label for="chat_id">Chat ID:</label>
@@ -13,30 +15,20 @@
     <input type="text" id="content"><br>
     <label for="response_to">Response To:</label>
     <input type="text" id="response_to"><br>
-    <button onclick="sendMessage()">Send Message</button>
-    <script>
-      function sendMessage() {
-        const chat_id = document.getElementById("chat_id").value;
-        const sender = document.getElementById("sender").value;
-        const content = document.getElementById("content").value;
-        const response_to = document.getElementById("response_to").value;
-        const data = {
-          chat_id: chat_id,
-          sender: sender,
-          content: content,
-          response_to: response_to
-        };
-        fetch('/api/send_message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error(error));
-      }
-    </script>
-  </body>
+    <label for="chat_name">Chat Name:</label>
+    <input type="text" id="chat_name"><br>
+    <label for="chat_password">Chat Password:</label>
+    <input type="text" id="chat_password"><br>
+    <br>
+
+    <button onclick="get_chat()">Get Chat</button>
+    <button onclick="create_chat()">Create Chat</button>
+    <button onclick="send_message()">Send Message</button>
+    
+    <div id="chat_div">
+      chat lol
+    </div>
+
+</body>
+  
 </html>

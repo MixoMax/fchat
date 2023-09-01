@@ -1,16 +1,45 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory, redirect, url_for
 from dataclasses import dataclass
 import os
 import time
 import csv
+import sqlite3
 import requests
 import hashlib
+from typing import TypedDict, List, Dict, Union
 
-# TODO:
 app = Flask(__name__)
+connection = sqlite3.connect("data/database.db", check_same_thread=False)
+cursor = connection.cursor()
 
 
+cursor.execute("""CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT,
+        last_online INTEGER,
+        chat_ids TEXT
+    )""")
 
+cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
+        chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_name TEXT,
+        chat_password TEXT,
+        users TEXT,
+        admins TEXT
+        )""")
+
+connection.commit()
+
+
+def find_chat_id(chat_name):
+    curser = connection.cursor()
+    cursor.execute("SELECT chat_id FROM chats WHERE chat_name = :chat_name", {"chat_name": chat_name})
+    chat_id = cursor.fetchone()
+    if chat_id == None:
+        return None
+    else:
+        return chat_id[0]
 
 class Encrypted_text:
     def __init__(self) -> None:
@@ -28,6 +57,9 @@ class Encrypted_text:
             output += chr(ord(char) - key)
         return output
 
+    def __eq__(self, __value: object) -> bool:
+        return self.text == __value.text
+    
     def __str__(self) -> str:
         return self.text
 
@@ -35,20 +67,13 @@ class Encrypted_text:
 class User:
         
     def __init__(self, username, password) -> None:
-        csv_path = "./data/users.csv"
-
         self.username = username
         self.password = password
-        
-        with open(csv_path, "r") as csv_file:
-            csv_data = list(csv.reader(csv_file))
-            self.user_id = csv_data[-1][0] + 1
         self.last_online = int(time.time())
-        
-        user_data = [self.user_id, self.username, self.password, self.last_online]
-        with open(csv_path, "a") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(user_data)
+        self.chat_ids = []
+
+        cursor.execute("INSERT INTO users (username, password, last_online, chat_ids) VALUES (:username, :password, :last_online, :chat_ids)", {"username": self.username, "password": self.password, "last_online": self.last_online, "chat_ids": str(self.chat_ids)})
+        connection.commit()
         
     
     def __str__(self) -> str:
@@ -59,62 +84,106 @@ class User:
             "username": self.username,
             "user_id": self.user_id,
             "password": self.password,
-            "last_online": self.last_online
+            "last_online": self.last_online,
+            "chat_ids": self.chat_ids
         }
         return j
     
     def add_chat(self, chat):
-        self.chats.append(chat)
+        self.chat_ids.append(chat)
     
     def update_last_online(self):
         self.last_online = int(time.time())
 
+
+def load_chat(chat_id) -> "Chat":
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM chats WHERE chat_id = :chat_id", {"chat_id": chat_id})
+    chat = cursor.fetchone()
+    if chat == None:
+        return None
+    chat = Chat(chat[1], chat[2])
+    chat.chat_id = chat_id
+    chat.users = chat[3]
+    chat.admins = chat[4]
+    return chat
+
 class Chat:
-    def __init__(self):
-        self.chat_name: str = ""
-        self.chat_password: str = ""
+    def __init__(self, chat_name, chat_password = "*") -> None:
+        self.chat_name: str = chat_name
+        self.chat_password: str = chat_password
         self.users = []
+        self.admins = []
         self.messages = []
-        
-    def from_csv(self, csv_path):
-        self.csv_path = csv_path
-        with open(csv_path, "r") as csv_file:
-            csv_reader = csv.reader(csv_file)
-            for idx, row in enumerate(csv_reader):
-                if idx == 0:
-                    self.chat_id = row[0]
-                    self.chat_name = row[1]
-                    self.chat_password = row[2]
-                else:
-                    self.messages.append(row)
-        
-        return self
-    
-    def create(self, chat_id, chat_name, chat_password):
+        self.chat_id = 0
+        self.last_send = int(time.time())
+        self.last_access = int(time.time())
+
+    def load(self, chat_id = None):
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        chat_id = find_chat_id(self.chat_name) if chat_id == None else chat_id
+        if chat_id == None:
+            return None, 404
+        sql_cmd = "SELECT * FROM messages" + str(chat_id)
         self.chat_id = chat_id
-        self.chat_name = chat_name
-        self.chat_password = chat_password
-        
-        self.csv_path = "./data/chats/" + self.chat_id + ".csv"
-        
-        os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
-        
-        with open(self.csv_path, "w") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow([self.chat_id, self.chat_name, self.chat_password])
-        
-        return self        
+        cursor.execute(sql_cmd)
+        messages = cursor.fetchall()
+        messages = [Message(m[0], m[1], m[2], m[3], m[4]) for m in messages]
+        self.messages = messages
+        self.last_access = int(time.time())
+        print("loaded chat " + str(self.chat_id))
+        return self, 200
     
-    def append_message(self, message):
-        message_data = [message.message_id, message.sender, message.content, message.timestamp, message.response_to]
-        self.messages.append(message_data)
-        with open(self.csv_path, "a") as csv_file:
-            csv_writer = csv.writer(csv_file)
-            csv_writer.writerow(message_data)
+    def create(self, chat_name, chat_password):
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        self.chat_name = chat_name
+        self.chat_password = str(Encrypted_text().encrypt(chat_password, 5))
+        cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
+        connection.commit()
+
+        self.chat_id = cursor.execute("SELECT chat_id FROM chats WHERE chat_id = (SELECT MAX(chat_id) FROM chats)").fetchone()[0]
+        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)"
+        cursor.execute(sql_cmd)
+        connection.commit()
+        return self 
+    
+    
+    
+    def append_message(self, message: "Message"):
+        sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        cursor.execute(sql_cmd, {"sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
+        connection.commit()
+        connection.close()
+        self.messages.append(message)
+        self.last_send = int(time.time())
     
     def append_user(self, user):
         user_id = user.user_id
         self.users.append(user_id)
+        cursor.execute("UPDATE chats SET users = :users WHERE chat_id = :chat_id", {"users": str(self.users), "chat_id": self.chat_id})
+        connection.commit()
+    
+    def check_password(self, password):
+        print(self.chat_name, str(Encrypted_text().decrypt(self.chat_password, password)))
+        return self.chat_name == str(Encrypted_text().decrypt(self.chat_password, password))
+
+    def get_highest_message_id(self) -> int:
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        table_name = "messages" + str(self.chat_id)
+        sql_cmd = "SELECT EXISTS (SELECT 1 FROM sqlite_schema WHERE type = 'table'AND name = :table_name)"
+        cursor.execute(sql_cmd, {"table_name": table_name})
+        table_exists = cursor.fetchone()[0]
+        if table_exists:
+            cursor.execute("SELECT message_id FROM messages" + table_name + " ORDER BY message_id DESC LIMIT 1")
+            message_id = cursor.fetchone()
+            return message_id[0]
+        else:
+            return 0
 
     def __str__(self) -> str:
         return self.chat_name
@@ -127,26 +196,20 @@ class Chat:
             "chat_name": self.chat_name,
             "chat_password": self.chat_password,
             "messages": messages,
-            "users": users
+            "users": users,
+            "admins": self.admins
         }
+        self.last_access = int(time.time())
         return j
 
+
 class Message:
-    def __init__(self, chat_id, sender, content, response_to = None):
-        self.chat_id = chat_id
+    def __init__(self, message_id, sender, content, timestamp = None,  response_to = None):
+        self.message_id = message_id
         self.sender = sender
         self.content = content
-        self.timestamp = int(time.time())
+        self.timestamp = int(time.time()) if timestamp == None else timestamp
         self.response_to = response_to
-        
-        csv_path = "./data/chats/" + chat_id + ".csv"
-        
-        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-        
-        try:
-            self.message_id = int(list(csv.reader(open(csv_path, "r")))[-1][0]) + 1
-        except:
-            self.message_id = 0
     
     
     def __str__(self) -> str:
@@ -162,42 +225,112 @@ class Message:
         }
         return j
 
+global chat_dict
+chat_dict: Dict[int, Chat] = {} #chat_id: Chat
+
+def filter_chat_dict():
+    global chat_dict
+    for chat_id in chat_dict:
+        if int(time.time()) - chat_dict[chat_id].last_access > 60:
+            chat_dict.pop(chat_id)
+
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
+@app.route("/static/<path:path>")
+def static_files(path):
+    print("serving " + path)
+    return send_from_directory("static", path)
+
+#temporary
+@app.route("/api/static/<path:path>")
+def static_files_api(path):
+    return send_from_directory("static", path), 200
+
+@app.route("/api/ping")
+def ping():
+    return jsonify({"success": True}), 200
+
+
+
+
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
-    chat_csv = "./data/chats/" + chat_id + ".csv"
-    messages = []
-    with open(chat_csv, "r") as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for row in csv_reader:
-            messages.append(row)
+    global chat_dict
     
-    return jsonify(messages)
+    if chat_id in chat_dict:
+        return jsonify(chat_dict[chat_id].to_json()), 200
+        filter_chat_dict()
+    else:
+        try:
+            chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+        except Exception as e:
+            print(e)
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat
+        return jsonify(chat_dict[chat_id].to_json()), 200        
 
-@app.route("/api/create_chat/<chat_id>/<chat_name>/<chat_password>")
-def create_chat(chat_id, chat_name, chat_password):
-    chat = Chat().create(chat_id, chat_name, chat_password)
-    return jsonify(chat.to_json())
+
+
+@app.route("/api/get_chat_length/<chat_id>")
+def get_chat_length(chat_id):
+    global chat_dict
+    
+    if chat_id in chat_dict:
+        return_str = jsonify({"success": True, "length": len(chat_dict[chat_id].messages)})
+        filter_chat_dict()
+        return return_str, 200
+        
+    else:
+        try:
+            chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+        except Exception as e:
+            print(e)
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat
+        return jsonify({"success": True, "length": len(chat.messages)}), 200
+
+@app.route("/api/create_chat/<chat_name>/<chat_password>")
+def create_chat(chat_name, chat_password):
+    global chat_dict
+    filter_chat_dict()
+    chat_id = find_chat_id(chat_name)
+    if chat_id != None:
+        return jsonify({"success": False, "error": "Chat already exists"}), 400
+    chat = Chat(chat_name, chat_password)
+    chat_dict[chat.chat_id] = chat
+    chat.create(chat_name, chat_password)
+    return jsonify({"success": True, "chat_id": chat.chat_id}), 200
 
 @app.route("/api/send_message", methods=["POST"])
 def send_message():
+
     data = request.get_json()
     chat_id = data["chat_id"]
+    chat_password = data.get("chat_password", "*")
     sender = data["sender"]
     content = data["content"]
     response_to = data["response_to"] if "response_to" in data else None
     
-    m = Message(chat_id, sender, content, response_to)
+    global chat_dict
     
-    csv_path = "./data/chats/" + chat_id + ".csv"
-    if os.path.exists(csv_path):
-        c = Chat().from_csv(csv_path)
-        c.append_message(m)
-        return jsonify(m.to_json())
-    else:
-        return jsonify({"error": "Chat does not exist"})
+    
+    if chat_id not in chat_dict:
+        chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
+        if err_code == 404:
+            return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat 
+    chat_dict[chat_id].append_message(Message(None, sender, content, response_to=response_to))
+    filter_chat_dict()
+    return jsonify({"success": True}), 200
 
-app.run(port=5000, debug=True)
+
+#run without multithreading
+app.run(host="0.0.0.0", port=80, threaded=False)
