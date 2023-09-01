@@ -139,10 +139,14 @@ class Chat:
         cursor = connection.cursor()
         self.chat_name = chat_name
         self.chat_password = str(Encrypted_text().encrypt(chat_password, 5))
-        self.chat_id = find_highest_chat_id() + 1
-        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, content TEXT, timestamp INTEGER, response_to INTEGER)"
+        cursor.execute("INSERT INTO chats (chat_name, chat_password, users, admins) VALUES (:chat_name, :chat_password, :users, :admins)", {"chat_id": self.chat_id, "chat_name": self.chat_name, "chat_password": self.chat_password, "users": str(self.users), "admins": str(self.admins)})
+        connection.commit()
+
+        self.chat_id = cursor.execute("SELECT chat_id FROM chats WHERE chat_id = (SELECT MAX(chat_id) FROM chats)").fetchone()[0]
+        sql_cmd = "CREATE TABLE IF NOT EXISTS messages" + str(self.chat_id) + " (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER, content TEXT, timestamp INTEGER, response_to INTEGER)"
         cursor.execute(sql_cmd)
         connection.commit()
+        return self 
     
     
     
