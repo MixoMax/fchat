@@ -6,6 +6,7 @@ import csv
 import sqlite3
 import requests
 import hashlib
+from typing import TypedDict, List, Dict, Union
 
 app = Flask(__name__)
 connection = sqlite3.connect("data/database.db", check_same_thread=False)
@@ -159,7 +160,6 @@ class Chat:
         connection.close()
         self.messages.append(message)
         self.last_send = int(time.time())
-        print("appended message to chat " + str(self.chat_id))
     
     def append_user(self, user):
         user_id = user.user_id
@@ -226,7 +226,7 @@ class Message:
         return j
 
 global chat_dict
-chat_dict = {} #chat_id: Chat object
+chat_dict: Dict[int, Chat] = {} #chat_id: Chat
 
 def filter_chat_dict():
     global chat_dict
@@ -260,9 +260,10 @@ def ping():
 @app.route("/api/get_chat/<chat_id>")
 def get_chat(chat_id):
     global chat_dict
-    filter_chat_dict()
+    
     if chat_id in chat_dict:
         return jsonify(chat_dict[chat_id].to_json()), 200
+        filter_chat_dict()
     else:
         try:
             chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
@@ -271,23 +272,20 @@ def get_chat(chat_id):
             return jsonify({"success": False, "error": "Chat not found"}), 404
         if err_code == 404:
             return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat
         return jsonify(chat_dict[chat_id].to_json()), 200        
 
-#temporary
-@app.route("/api/get_chat_uncached/<chat_id>/")
-def get_chat_uncached(chat_id):
-    chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
-    if err_code == 404:
-        return jsonify({"success": False, "error": "Chat not found"}), 404
-    print("uncached called: len(messages) = " + str(len(chat.messages)))
-    return jsonify(chat.to_json()), 200
+
 
 @app.route("/api/get_chat_length/<chat_id>")
 def get_chat_length(chat_id):
     global chat_dict
-    filter_chat_dict()
+    
     if chat_id in chat_dict:
-        return jsonify({"success": True, "length": len(chat_dict[chat_id].messages)}), 200
+        return_str = jsonify({"success": True, "length": len(chat_dict[chat_id].messages)})
+        filter_chat_dict()
+        return return_str, 200
+        
     else:
         try:
             chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
@@ -296,6 +294,7 @@ def get_chat_length(chat_id):
             return jsonify({"success": False, "error": "Chat not found"}), 404
         if err_code == 404:
             return jsonify({"success": False, "error": "Chat not found"}), 404
+        chat_dict[chat_id] = chat
         return jsonify({"success": True, "length": len(chat.messages)}), 200
 
 @app.route("/api/create_chat/<chat_name>/<chat_password>")
@@ -321,22 +320,15 @@ def send_message():
     response_to = data["response_to"] if "response_to" in data else None
     
     global chat_dict
-    filter_chat_dict()
     
-    if chat_id in chat_dict:
-        print("loaded from cache")
-        chat = chat_dict[chat_id]
-    else:
-        try:
-            chat, err_code = Chat(chat_id, chat_password).load(chat_id=chat_id)
-        except Exception as e:
-            print(e)
-            return jsonify({"success": False, "error": "Chat not found"}), 404
+    
+    if chat_id not in chat_dict:
+        chat, err_code = Chat(chat_id, "*").load(chat_id=chat_id)
         if err_code == 404:
             return jsonify({"success": False, "error": "Chat not found"}), 404
-        chat_dict[chat_id] = chat
-        
+        chat_dict[chat_id] = chat 
     chat_dict[chat_id].append_message(Message(None, sender, content, response_to=response_to))
+    filter_chat_dict()
     return jsonify({"success": True}), 200
 
 
