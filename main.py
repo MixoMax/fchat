@@ -30,15 +30,6 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS chats (
 
 connection.commit()
 
-def find_highest_chat_id():
-    cursor = connection.cursor()
-    cursor.execute("SELECT chat_id FROM chats")
-    chat_ids = cursor.fetchall()
-    chat_ids = [int(c[0]) for c in chat_ids]
-    if len(chat_ids) == 0:
-        return 0
-    else:
-        return max(chat_ids)
 
 def find_chat_id(chat_name):
     curser = connection.cursor()
@@ -175,6 +166,20 @@ class Chat:
     def check_password(self, password):
         print(self.chat_name, str(Encrypted_text().decrypt(self.chat_password, password)))
         return self.chat_name == str(Encrypted_text().decrypt(self.chat_password, password))
+
+    def get_highest_message_id(self) -> int:
+        connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
+        table_name = "messages" + str(self.chat_id)
+        sql_cmd = "SELECT EXISTS (SELECT 1 FROM sqlite_schema WHERE type = 'table'AND name = :table_name)"
+        cursor.execute(sql_cmd, {"table_name": table_name})
+        table_exists = cursor.fetchone()[0]
+        if table_exists:
+            cursor.execute("SELECT message_id FROM messages" + table_name + " ORDER BY message_id DESC LIMIT 1")
+            message_id = cursor.fetchone()
+            return message_id[0]
+        else:
+            return 0
 
     def __str__(self) -> str:
         return self.chat_name
