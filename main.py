@@ -158,6 +158,7 @@ class Chat:
     def append_message(self, message: "Message"):
         sql_cmd = "INSERT INTO messages" + str(self.chat_id) + " (sender, content, timestamp, response_to) VALUES (:sender, :content, :timestamp, :response_to)"
         connection = sqlite3.connect("data/database.db", check_same_thread=False)
+        cursor = connection.cursor()
         cursor.execute(sql_cmd, {"sender": message.sender, "content": message.content, "timestamp": message.timestamp, "response_to": message.response_to})
         connection.commit()
         connection.close()
