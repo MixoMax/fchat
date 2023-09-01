@@ -282,9 +282,9 @@ def get_chat_length(chat_id):
     global chat_dict
     
     if chat_id in chat_dict:
-        return_str = jsonify({"success": True, "length": len(chat_dict[chat_id].messages)})
+        return_json = jsonify({"success": True, "length": len(chat_dict[chat_id].messages)})
         filter_chat_dict()
-        return return_str, 200
+        return return_json, 200
         
     else:
         try:
