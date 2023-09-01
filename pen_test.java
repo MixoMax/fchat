@@ -13,14 +13,8 @@ import java.util.concurrent.Callable;
 
 public class pen_test {
     public static void main(String[] args) throws Exception {
-        int num_requests = 1000;
-        //make_request("create_chat/2/*", 1);
-        //create_thread("ping", num_requests);
-        //create_thread("static/css/style.css", num_requests);
-        //create_thread("static/js/chat.js", num_requests);
-        create_thread("send_message", num_requests);
-        //create_thread("get_chat/2", 25);
-        //create_thread("get_chat_uncached/2", 25);
+        int num_requests = 10000;
+        make_post_request("send_message", num_requests);
     }
     //void function to make a http request to an endpoint
     public static void make_request(String endpoint, int num_requests) throws Exception {
@@ -33,6 +27,8 @@ public class pen_test {
             if (status != 200 && status != 308) {
                 System.out.println("Error: " + status + " in " + endpoint);
             }
+            //String responseMessage = con.getResponseMessage();
+            //System.out.println(responseMessage);
             con.disconnect();
         }
 
