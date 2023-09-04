@@ -123,4 +123,22 @@ def confirm_login(user_identifier, hashed_password) -> bool:
             return True
         else:
             return False
-        
+
+def user_exists(username: str) -> bool:
+    conn = open_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Users WHERE UserName=%s", (username,))
+        result = cursor.fetchone()
+        if result:
+            return True
+        else:
+            return False
+
+def create_user_db(username: str, hashed_password: str, email: str = "") -> bool:
+    if user_exists(username):
+        return False
+    conn = open_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Users (UserName, Password, Email) VALUES (%s, %s, %s)", (username, hashed_password, email))
+        conn.commit()
+        return True
