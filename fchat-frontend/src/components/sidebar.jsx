@@ -1,49 +1,94 @@
 import {useState, useEffect} from 'react';
 import "./sidebar.css";
 
-const Sidebar = () => {
+const SidebarLogin = ({ user, setUser, setPassword }) => {
+    if (user) {
+        return (
+            <div className="sidebar-login">
+                <div className="sidebar-username">{user}</div>
+                <button className="logout-button" onClick={
+                    () => {
+                        setUser(null);
+                        setPassword(null);
+                    }
+                    }> Logout </button>
+            </div>
+        );
+    } else {
+        return (
+            <div className="sidebar-login vbox">
+                <input type="text" id="username" placeholder="Username" />
+                <input type="password" id="password" placeholder="Password" />
+                
+                <button className="login-button" type="submit" onClick={
+                    () => {
+                        let username = document.getElementById("username").value;
+                        let password = document.getElementById("password").value;
 
+                        if (username && password) {
+                            setUser(username);
+                            setPassword(password);
+                        }
+                    }
+                } > Login </button>
+            </div>
+        );
+    }
+}
 
+const SidebarSearch = ({ setChat_id }) => {
+    const [search, setSearch] = useState("");
+    const [results, setResults] = useState([]);
+    
+    useEffect(() => {
+        if (search) {
+            // fetch search results
+            // setResults([...]);
+
+            var fake_results = [
+                {name: "Result 1", id: 1},
+                {name: "Result 2", id: 2},
+                {name: "Result 3", id: 3},
+            ];
+            setResults(fake_results);
+        }
+    }, [search]);
+
+    
+
+    return (
+        <div className="sidebar-search vbox">
+            <div className="search-header hbox">
+                <input type="text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <div className="search-results vbox">
+                {results.map((result) => {
+                    return <div className="search-result" key={result.id} onClick={() => setChat_id(result.id)}>{result.name}</div>
+                })}
+            </div>
+        </div>
+    );
+}
+
+const Sidebar = ({ user, setUser, setPassword, setChat_id, sidebarChats }) => {
     return (
         <div className="sidebar">
             <div className="sidebar-header">FChat</div>
 
-            <div className="sidebar-login vbox">
-                <input type="text" placeholder="Username" />
-                <input type="password" placeholder="Password" />
-                <button className="login-button" type="submit"> Login </button>
-            </div>
+            <SidebarLogin user={user} setUser={setUser} setPassword={setPassword} />
 
             <div className="sidebar-create-chat hbox">
                 <input type="text" placeholder="Chat Name" />
                 <button> Create Chat </button>
             </div>
 
-            <div className="sidebar-search vbox">
-                <div className="search-header hbox">
-                    <input type="text" placeholder="Search" />
-                    <button> Search </button>
-                </div>
-                <div className="search-results vbox">
-                    <div className="search-result">Result 1aedkhfguydfsdf</div>
-                    <div className="search-result">Result 2aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-                    <div className="search-result">Result 3aedkhfguydfsdf</div>
-
-                    <div className="search-result">Result 3</div>
-                    <div className="search-result">Result 3</div>
-                </div>
-            </div>
+            <SidebarSearch setChat_id={setChat_id} />
 
             <div className="sidebar-chats vbox">
-                <div className="chat-item">Chat 1</div>
-                <div className="chat-item">Chat 2</div>
-                <div className="chat-item">Chat 3</div>
+                {sidebarChats.map((chat, index) => {
+                    return <div className="chat-item" key={index} onClick={() => setChat_id(chat.id)}>{chat.name}</div>
+                })
+                }
             </div>
             
         </div>

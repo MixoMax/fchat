@@ -3,12 +3,20 @@ import time
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.requests import Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from db_wrapper import DB, User, Message, Chat, generate_id
 
 
-
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 
 db = DB(db_path="db.sqlite3")
 
@@ -51,11 +59,16 @@ auth = Auth()
 
 
 @app.get("/users/auth")
-def auth_user(user_id: str, password: str) -> JSONResponse:
-    user, success = db.get_user(user_id)
+def auth_user(password: str, user_id: str = None, name: str = None):
+    if user_id:
+        user, success = db.get_user(user_id)
+    elif name:
+        user, success = db.get_user_by_name(name)
+    else:
+        return JSONResponse(content={"error": "No user_id or name provided"}, status_code=400)
 
     if not success:
-        return JSONResponse(content={"error": user}, status_code=500)
+        return JSONResponse(content={"error": str(user)}, status_code=500)
     
     if user.password != password:
         return JSONResponse(content={"error": "Invalid password"}, status_code=401)
@@ -88,7 +101,7 @@ def search_users(query: str = ""):
     users, success = db.search_users(query)
 
     if not success:
-        return JSONResponse(content={"error": users}, status_code=500)
+        return JSONResponse(content={"error": str(users)}, status_code=500)
 
     return JSONResponse(content={"users": [user.id for user in users]})
 
@@ -112,7 +125,7 @@ async def add_message(request: Request):
         chat_id = data["chat_id"]
         chat, success = db.get_chat(chat_id)
         if not success:
-            return JSONResponse(content={"error": chat}, status_code=500)
+            return JSONResponse(content={"error": str(chat)}, status_code=500)
         
         chat.message_ids.append(message.id)
         db.update_chat(chat)
@@ -140,11 +153,11 @@ async def update_message(request: Request):
     
     message, success = db.get_message(message_id)
     if not success:
-        return JSONResponse(content={"error": message}, status_code=500)
+        return JSONResponse(content={"error": str(message)}, status_code=500)
     
     message.content = content
     db.update_message(message)
-    return JSONResponse(content={"success": success})
+    return JSONResponse(content={"success": str(success)})
 
 
 @app.get("/messages/get")
@@ -152,19 +165,19 @@ def get_message(message_id: str = None, chat_id: str = None):
     if message_id:
         message, success = db.get_message(message_id)
         if not success:
-            return JSONResponse(content={"error": message}, status_code=500)
+            return JSONResponse(content={"error": str(message)}, status_code=500)
         return JSONResponse(content={"message": message.to_dict()})
     
     if chat_id:
         chat, success = db.get_chat(chat_id)
         if not success:
-            return JSONResponse(content={"error": chat}, status_code=500)
+            return JSONResponse(content={"error": str(chat)}, status_code=500)
         
         messages = []
         for message_id in chat.message_ids:
             message, success = db.get_message(message_id)
             if not success:
-                return JSONResponse(content={"error": message}, status_code=500)
+                return JSONResponse(content={"error": str(message)}, status_code=500)
             messages.append(message.to_dict())
         
         return JSONResponse(content={"messages": messages})
@@ -174,19 +187,19 @@ def get_chat(chat_id: str = None, user_id: str = None):
     if chat_id:
         chat, success = db.get_chat(chat_id)
         if not success:
-            return JSONResponse(content={"error": chat}, status_code=500)
+            return JSONResponse(content={"error": str(chat)}, status_code=500)
         return JSONResponse(content={"chat": chat.to_dict()})
     
     if user_id:
         chats, success = db.get_chats_from_user(user_id)
         if not success:
-            return JSONResponse(content={"error": chats}, status_code=500)
+            return JSONResponse(content={"error": str(chats)}, status_code=500)
         
         return JSONResponse(content={"chats": [chat.to_dict() for chat in chats]})
     
     chats, success = db.get_all_chats()
     if not success:
-        return JSONResponse(content={"error": chats}, status_code=500)
+        return JSONResponse(content={"error": str(chats)}, status_code=500)
     
     return JSONResponse(content={"chats": [chat.to_dict() for chat in chats]})
 
@@ -206,7 +219,7 @@ def delete_chat(chat_id: str, user_id: str, key: str):
     
     chat, success = db.get_chat(chat_id)
     if not success:
-        return JSONResponse(content={"error": chat}, status_code=500)
+        return JSONResponse(content={"error": str(chat)}, status_code=500)
     
     if user_id not in chat.user_ids:
         return JSONResponse(content={"error": "User not in chat"}, status_code=401)
@@ -222,7 +235,7 @@ def add_user_to_chat(chat_id: str, user_id: str, key: str):
     
     chat, success = db.get_chat(chat_id)
     if not success:
-        return JSONResponse(content={"error": chat}, status_code=500)
+        return JSONResponse(content={"error": str(chat)}, status_code=500)
     
     chat.user_ids.append(user_id)
     db.update_chat(chat)
@@ -236,7 +249,7 @@ def remove_user_from_chat(chat_id: str, user_id: str, key: str):
     
     chat, success = db.get_chat(chat_id)
     if not success:
-        return JSONResponse(content={"error": chat}, status_code=500)
+        return JSONResponse(content={"error": str(chat)}, status_code=500)
     
     if user_id not in chat.user_ids:
         return JSONResponse(content={"error": "User not in chat"}, status_code=401)
@@ -246,6 +259,10 @@ def remove_user_from_chat(chat_id: str, user_id: str, key: str):
 
     return JSONResponse(content={"success": True})
 
+@app.get("/chats/exists")
+def chat_exists(chat_id: str):
+    chat, success = db.get_chat(chat_id)
+    return JSONResponse(content={"exists": success})
 
 @app.get("/favicon.ico")
 def favicon():

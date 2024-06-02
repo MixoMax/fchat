@@ -2,52 +2,55 @@ import {useEffect, useState} from 'react';
 import Message from './message';
 import "./chat.css";
 
-const Chat = ({ chat_id }) => {
-    const [chat, setChat] = useState(null);
-    
+const Chat = ({ chat_id, setChat, chat_messages, setChatMessages, user }) => {
+    const [chat_name, setChatName] = useState(null);
+
     useEffect(() => {
-        //manual override
-        var data = {
-            "name": "Test Chat",
-            "messages": [
-                {
-                    "sender": "Test User",
-                    "text": "Hello World!"
-                },
-                {
-                    "sender": "Test User",
-                    "text": "This is a test message."
-                },
-                {
-                    "sender": "MixoMax",
-                    "text": "This is a test response."
-                }
-            ]
-        };
-        setChat(data);
+        if (chat_id) {
+            setChatName("Example Chat");
+        }
     }, [chat_id]);
+
     
     return (
         <div className="chat vbox">
-            <h1 className="chat-header">{chat ? chat.name : 'Loading...'}</h1>
+            <h1 className="chat-header">{chat_name}</h1>
             
             <div className="messages-box vbox">
-                {chat ? chat.messages.map((message, index) => (
-                    <Message key={index} message={message} />
-                )) : 'Loading...'}
+                {chat_messages.map((message, index) => {
+                    //set message.is_mine to true if the message sender is the current user
+                    message.is_mine = message.sender === user;
+                    return <Message key={index} message={message} />
+                })}
             </div>
             <div className="chat-input hbox">
-                <input type="text" placeholder="Type a message..." />
+                <input type="text" placeholder="Type a message..." onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                        var message_input = document.querySelector('.chat-input input');
+                        var message_content = message_input.value;
+                        if (message_content && user) {
+                            var new_message = {
+                                sender: user,
+                                text: message_content
+                            };
+                            setChatMessages([...chat_messages, new_message]);
+                        }
+                        message_input.value = "";
+                    }
+                }} />
+
                 <button
                     onClick={() => {
-                        var message = document.querySelector('.chat-input input').value;
-                        setChat({
-                            ...chat,
-                            messages: chat.messages.concat({
-                                sender: 'Test User',
-                                text: message
-                            })
-                        });
+                        var message_input = document.querySelector('.chat-input input');
+                        var message_content = message_input.value;
+                        if (message_content && user) {
+                            var new_message = {
+                                sender: user,
+                                text: message_content
+                            };
+                            setChatMessages([...chat_messages, new_message]);
+                        }
+                        message_input.value = "";
                     }}
                 > Send </button>
             </div>
