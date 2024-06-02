@@ -1,5 +1,2 @@
-.vscode
-*.csv
-*.txt
-*.pyc
-data/*
+
+/node_modules
