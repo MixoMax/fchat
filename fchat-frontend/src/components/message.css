@@ -1,0 +1,32 @@
+
+
+.message-container {
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px;
+    max-width: 46%;
+    height: auto;
+}
+
+.message-container.mine {
+    background-color: var(--color-3);
+    color: var(--color-text);
+    align-self: flex-end;
+}
+
+.message-container.theirs {
+    background-color: var(--color-4);
+    color: var(--color-text);
+    align-self: flex-start;
+}
+
+.message-container .message-text {
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+.message-container .message-sender {
+    font-size: 0.8em;
+    color: var(--color-text);
+    align-self: flex-end;
+}

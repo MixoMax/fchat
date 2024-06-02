@@ -1,0 +1,51 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+html {
+  --color-primary: #525492;
+  --color-1: var(--color-primary);
+  --color-secondary: #008F85;
+  --color-2: var(--color-secondary);
+  --color-3: #08A4BD;
+  --color-4: #446DF6;
+
+  --color-text: #A8D0F0;
+
+  background-color: var(--color-primary);
+  color: var(--color-text);
+
+  font-family: 'Space Mono', monospace;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-y: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.hbox {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.vbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+

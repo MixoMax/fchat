@@ -1,0 +1,111 @@
+
+
+.sidebar {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-2);
+    border: 1px solid black;
+    width: 20%;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar > * {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.sidebar  * {
+    border: 0px solid black;
+}
+
+.sidebar .sidebar-header {
+    font-size: 3em;
+    align-self: flex-start;
+}
+
+.sidebar .sidebar-login {
+    font-size: 1.5em;
+    width: 80%;
+    height: 20%;
+    margin-top: 5%;
+}
+
+.sidebar .sidebar-login input {
+    width: 80%;
+    height: 50px;
+    
+    margin-bottom: 10px;
+}
+
+.login-button {
+    width: 80%;
+    height: 50px;
+
+    color: var(--color-text);
+    background-color: var(--color-3);
+}
+
+.login-button:hover {
+    background-color: var(--color-4);
+}
+
+.sidebar-create-chat {
+    height: 10%;
+    margin-top: 5%;
+    width: 80%;
+}
+
+.sidebar-search {
+    height: 30%;
+}
+
+.sidebar-search .search-header {
+    padding: 0px;
+    height: 15%;
+    width: 80%;
+}
+
+.search-header input {
+    width: 80%;
+    height: 50%;
+
+    color: var(--color-text);
+
+}
+
+.search-header button {
+    width: 20%;
+    height: 50%;
+
+    color: var(--color-text);
+    background-color: var(--color-3);
+
+    margin-left: 5px;
+}
+
+.sidebar-search .search-results {
+    max-height: 75%;
+    width: 80%;
+    max-width: 80%;
+    overflow-y: auto;
+}
+
+.sidebar-chats {
+    height: 60%;
+    width: 80%;
+    margin-top: 5%;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-chats .chat-item {
+    height: 10%;
+    width: 100%;
+}
